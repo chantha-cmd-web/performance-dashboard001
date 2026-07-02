@@ -84,8 +84,7 @@ import {
   ThemeConfig,
   SyncConfig,
   DeviceSession,
-  SharedState,
-  WSMessage
+  SharedState
 } from './types';
 
 import {
@@ -100,34 +99,10 @@ import {
 
 import { Icon } from './components/Icon';
 import { SvgPicker } from './components/SvgPicker';
+import { loadRemoteState, saveRemoteState, subscribeRemoteState } from './firebase';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
-// Parse operating system, browser, and device classification from client navigator
-function parseDeviceDetails() {
-  const ua = navigator.userAgent;
-  let os = "Web App Client";
-  let browser = "Web Browser";
-  let deviceType: 'Desktop' | 'Mobile' | 'Tablet' = 'Desktop';
-
-  if (/Windows/i.test(ua)) os = "Windows PC";
-  else if (/Macintosh/i.test(ua)) os = "macOS";
-  else if (/iPhone/i.test(ua)) { os = "iPhone"; deviceType = "Mobile"; }
-  else if (/iPad/i.test(ua)) { os = "iPad"; deviceType = "Tablet"; }
-  else if (/Android/i.test(ua)) {
-    os = "Android";
-    deviceType = /Mobile/i.test(ua) ? "Mobile" : "Tablet";
-  } else if (/Linux/i.test(ua)) os = "Linux Machine";
-
-  if (/Chrome/i.test(ua)) browser = "Chrome";
-  else if (/Safari/i.test(ua)) browser = "Safari";
-  else if (/Firefox/i.test(ua)) browser = "Firefox";
-  else if (/Edge/i.test(ua)) browser = "Edge";
-  else if (/Opera/i.test(ua)) browser = "Opera";
-
-  return { os, browser, deviceType };
-}
 
 function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -204,11 +179,7 @@ export default function App() {
   const [newItemName, setNewItemName] = useState<string>('');
   const [newItemUrl, setNewItemUrl] = useState<string>('');
 
-  // WebSocket Ref
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastVersionRef = useRef<number | undefined>(undefined);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize Clock
   useEffect(() => {
@@ -240,114 +211,41 @@ export default function App() {
     root.style.setProperty('--item-scale', String(theme.itemScale / 100));
   }, [theme]);
 
-  // Restore state from localStorage on startup (for static deployment)
-  const restoreLocalState = () => {
-    try {
+  // Load initial state: Firebase -> localStorage -> defaults
+  useEffect(() => {
+    const init = async () => {
+      setWsStatus('connecting');
+      try {
+        const remote = await loadRemoteState();
+        if (remote && remote.sections?.length) {
+          applyDownloadedState(remote);
+          setWsStatus('connected');
+          showSyncLog('Synchronized in real-time!', false);
+          return;
+        }
+      } catch {}
       const saved = localStorage.getItem('par_dashboard_state');
       if (saved) {
-        const data = JSON.parse(saved);
-        if (data && data.sections && data.sections.length > 0) {
-          applyDownloadedState(data);
-        }
+        try {
+          const data = JSON.parse(saved);
+          if (data?.sections?.length) applyDownloadedState(data);
+        } catch {}
       }
-    } catch {}
-  };
-
-  // Connect WebSockets for Real-time Platforms Updates (only works with local server)
-  useEffect(() => {
-    connectWS();
-    restoreLocalState();
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      setWsStatus('disconnected');
     };
+    init();
   }, []);
 
-  // Dynamic WebSocket handshake
-  const wsRetryRef = useRef(0);
-  const connectWS = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    if (wsRetryRef.current >= 3) return;
-    wsRetryRef.current++;
-
-    setWsStatus('connecting');
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host || 'localhost:3000';
-    const wsUrl = `${protocol}//${host}`;
-
-    try {
-      const socket = new WebSocket(wsUrl);
-      wsRef.current = socket;
-
-      socket.onopen = () => {
-        setWsStatus('connected');
-        showSyncLog('Synchronized in real-time!', false);
-
-        // Register client device info
-        const deviceData = parseDeviceDetails();
-        socket.send(JSON.stringify({
-          type: 'device_register',
-          payload: deviceData
-        }));
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          const message: WSMessage = JSON.parse(event.data as string);
-          switch (message.type) {
-            case 'init':
-              if (message.clientId) setClientId(message.clientId);
-              if (message.payload?.state) {
-                applyDownloadedState(message.payload.state);
-              }
-              if (message.payload?.connectedDevices) {
-                setConnectedDevices(message.payload.connectedDevices);
-              }
-              break;
-
-            case 'device_list':
-              if (message.payload) {
-                setConnectedDevices(message.payload);
-              }
-              break;
-
-            case 'sync_update':
-              if (message.payload) {
-                applyDownloadedState(message.payload);
-                showSyncLog('System updated via remote device!', false);
-              }
-              break;
-
-            case 'pong':
-              // Keep alive response
-              break;
-          }
-        } catch (parseErr) {
-          console.error("Error parsing socket frame:", parseErr);
-        }
-      };
-
-      socket.onclose = () => {
-        setWsStatus('disconnected');
-        // Exponential automatic reconnection loop
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connectWS();
-        }, 5000);
-      };
-
-      socket.onerror = (err) => {
-        console.error("WebSocket socket error:", err);
-        setWsStatus('disconnected');
-      };
-
-    } catch (e) {
-      console.error("Failed to establish WebSocket handshake:", e);
-      setWsStatus('disconnected');
-    }
-  };
+  // Subscribe to real-time Firestore updates from other devices
+  useEffect(() => {
+    const unsub = subscribeRemoteState((state) => {
+      if (state.version && lastVersionRef.current !== undefined && state.version <= lastVersionRef.current) return;
+      applyDownloadedState(state);
+      setWsStatus('connected');
+      showSyncLog('System updated via remote device!', false);
+    });
+    return unsub;
+  }, []);
 
   // Helper status notice banner logger
   const showSyncLog = (message: string, isErr: boolean) => {
@@ -389,14 +287,8 @@ export default function App() {
       version: nextVersion
     };
 
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'sync_update',
-        payload: nextState
-      }));
-    } else {
-      localStorage.setItem('par_dashboard_state', JSON.stringify(nextState));
-    }
+    localStorage.setItem('par_dashboard_state', JSON.stringify(nextState));
+    saveRemoteState(nextState);
   };
 
   // Toggle Edit mode
