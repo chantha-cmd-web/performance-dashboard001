@@ -10,3 +10,4 @@ state_persistence.json
 .vite/
 
 *.local
+.vercel/

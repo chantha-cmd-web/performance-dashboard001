@@ -264,10 +264,14 @@ export default function App() {
   }, []);
 
   // Dynamic WebSocket handshake
+  const wsRetryRef = useRef(0);
   const connectWS = () => {
     if (wsRef.current) {
       wsRef.current.close();
     }
+
+    if (wsRetryRef.current >= 3) return;
+    wsRetryRef.current++;
 
     setWsStatus('connecting');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -974,7 +978,7 @@ export default function App() {
             <span className={`relative inline-flex rounded-full h-2 w-2 ${wsStatus === 'connected' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
           </div>
           <span className="font-semibold text-slate-300">
-            {wsStatus === 'connected' ? `${connectedDevices.length} Connected Devices` : 'Offline Sync (Reconnecting)'}
+            {wsStatus === 'connected' ? `${connectedDevices.length} Connected Devices` : 'Offline'}
           </span>
           {wsStatus === 'connected' && (
             <div className="flex gap-1 ml-1 text-slate-400 border-l border-slate-800 pl-2">
