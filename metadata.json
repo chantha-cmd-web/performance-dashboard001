@@ -1,0 +1,6 @@
+{
+  "name": "Performance Assessment Record",
+  "description": "Enterprise dashboard designed for managing operations, finance, and academics reports with real-time browser-to-browser updates and device synchronization indicators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

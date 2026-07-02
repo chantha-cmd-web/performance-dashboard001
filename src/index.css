@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/* Shine animation for sidebar active items */
+@keyframes shine {
+  0%, 100% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+}
+
+/* Apply item-scale to dashboard cards */
+.dashboard-card {
+  transform: scale(var(--item-scale, 1));
+  transform-origin: center center;
+}
+
+/* Day mode overrides */
+[data-theme="light"] {
+  --day-bg: #f1f5f9;
+  --day-surface: rgba(255, 255, 255, 0.85);
+  --day-border: rgba(0, 0, 0, 0.08);
+  --day-text: #0f172a;
+  --day-text-secondary: #475569;
+  --day-header-bg: rgba(255, 255, 255, 0.9);
+  --day-header-border: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .bg-slate-950\/85,
+[data-theme="light"] .bg-slate-950\/80,
+[data-theme="light"] .bg-slate-950\/70,
+[data-theme="light"] .bg-slate-950\/60 {
+  background-color: var(--day-surface) !important;
+}
+
+[data-theme="light"] .bg-slate-950 {
+  background-color: #ffffff !important;
+}
+
+[data-theme="light"] .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+[data-theme="light"] .bg-slate-900\/90,
+[data-theme="light"] .bg-slate-900\/65,
+[data-theme="light"] .bg-slate-900\/60 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="light"] .bg-slate-900\/35 {
+  background-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme="light"] .border-slate-800,
+[data-theme="light"] .border-slate-800\/80,
+[data-theme="light"] .border-slate-800\/60,
+[data-theme="light"] .border-slate-800\/50,
+[data-theme="light"] .border-slate-850,
+[data-theme="light"] .border-slate-850\/80,
+[data-theme="light"] .border-slate-850\/60 {
+  border-color: var(--day-border) !important;
+}
+
+[data-theme="light"] .border-slate-700,
+[data-theme="light"] .border-slate-700\/60 {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme="light"] .text-slate-100,
+[data-theme="light"] .text-white {
+  color: var(--day-text) !important;
+}
+
+[data-theme="light"] .text-slate-200 {
+  color: var(--day-text) !important;
+}
+
+[data-theme="light"] .text-slate-300 {
+  color: var(--day-text-secondary) !important;
+}
+
+[data-theme="light"] .text-slate-400,
+[data-theme="light"] .text-slate-500 {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+[data-theme="light"] .hover\:text-white:hover {
+  color: var(--day-text) !important;
+}
+
+[data-theme="light"] .hover\:bg-slate-800:hover,
+[data-theme="light"] .hover\:bg-slate-850:hover,
+[data-theme="light"] .hover\:bg-slate-900:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .hover\:bg-slate-900\/40:hover {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] .hover\:text-cyan-400:hover {
+  color: #0891b2 !important;
+}
+
+[data-theme="light"] .hover\:text-amber-400:hover {
+  color: #d97706 !important;
+}
+
+[data-theme="light"] header,
+[data-theme="light"] footer {
+  background-color: var(--day-header-bg) !important;
+  border-color: var(--day-header-border) !important;
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select {
+  background-color: #ffffff !important;
+  border-color: var(--day-border) !important;
+  color: var(--day-text) !important;
+}
+
+[data-theme="light"] input::placeholder {
+  color: #94a3b8 !important;
+}
+
+[data-theme="light"] .bg-slate-800 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .shadow-inner,
+[data-theme="light"] .shadow-lg,
+[data-theme="light"] .shadow-md,
+[data-theme="light"] .shadow-sm {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .hover\:bg-red-950\/30:hover {
+  background-color: rgba(254, 202, 202, 0.3) !important;
+}
+
+[data-theme="light"] .hover\:text-rose-400:hover {
+  color: #e11d48 !important;
+}
+
+[data-theme="light"] .bg-yellow-950\/40 {
+  background-color: rgba(254, 243, 199, 0.6) !important;
+  border-color: #fcd34d !important;
+}
+
+[data-theme="light"] .text-yellow-300 {
+  color: #92400e !important;
+}
+
+[data-theme="light"] .text-yellow-400 {
+  color: #d97706 !important;
+}
