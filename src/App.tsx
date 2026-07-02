@@ -129,9 +129,7 @@ export default function App() {
   const [isDayMode, setIsDayMode] = useState<boolean>(false);
   const [syncDoc, setSyncDoc] = useState<SyncConfig>(DEFAULT_SYNC);
 
-  // Active Device Connections
-  const [clientId, setClientId] = useState<string>('');
-  const [connectedDevices, setConnectedDevices] = useState<DeviceSession[]>([]);
+  // Sync status
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [syncNotice, setSyncNotice] = useState<string>('');
   const [isNoticeError, setIsNoticeError] = useState<boolean>(false);
@@ -261,8 +259,14 @@ export default function App() {
     if (!state) return;
     if (state.version && lastVersionRef.current !== undefined && state.version <= lastVersionRef.current) return;
     if (state.version) lastVersionRef.current = state.version;
-    if (state.sections) setSections(state.sections);
-    if (state.sectionOrder) setSectionOrder(state.sectionOrder);
+    if (state.sections) setSections(prev => {
+      if (state.sections.length >= prev.length) return state.sections;
+      return prev.map(p => state.sections.find((s: any) => s.id === p.id) || p);
+    });
+    if (state.sectionOrder) setSectionOrder(prev => {
+      if (state.sectionOrder.length >= prev.length) return state.sectionOrder;
+      return [...state.sectionOrder, ...prev.filter((id: string) => !state.sectionOrder.includes(id))];
+    });
     if (state.profile) setProfile(state.profile);
     if (state.theme) setTheme(state.theme);
     if (state.syncDoc) setSyncDoc(state.syncDoc);
@@ -863,32 +867,17 @@ export default function App() {
           </button>
         </div>
 
-        {/* Dynamic Connected Platforms Ticker widget */}
-        <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800/60 text-xs text-slate-400 font-mono shadow-inner">
-          <div className="relative flex h-2 w-2">
+        {/* Sync status indicator */}
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800/60 text-xs text-slate-400 font-mono shadow-inner">
+          <span className="relative flex h-2 w-2">
             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${wsStatus === 'connected' ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
             <span className={`relative inline-flex rounded-full h-2 w-2 ${wsStatus === 'connected' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
-          </div>
+          </span>
           <span className="font-semibold text-slate-300">
-            {wsStatus === 'connected' ? `${connectedDevices.length} Connected Devices` : 'Offline'}
+            {wsStatus === 'connected' ? 'Sync Active' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
           </span>
           {wsStatus === 'connected' && (
-            <div className="flex gap-1 ml-1 text-slate-400 border-l border-slate-800 pl-2">
-              {connectedDevices.slice(0, 3).map((dev, i) => (
-                <div key={i} title={`${dev.browser} on ${dev.os}`} className={`p-0.5 max-w-[20px] rounded hover:bg-slate-800 cursor-help ${dev.isCurrent ? 'text-cyan-400' : 'text-slate-500'}`}>
-                  {dev.deviceType === 'Mobile' ? (
-                    <Smartphone size={12} />
-                  ) : dev.deviceType === 'Tablet' ? (
-                    <TabletIcon size={12} />
-                  ) : (
-                    <Laptop size={12} />
-                  )}
-                </div>
-              ))}
-              {connectedDevices.length > 3 && (
-                <span className="text-[10px] bg-slate-800 px-1 rounded font-sans text-slate-300">+{connectedDevices.length - 3}</span>
-              )}
-            </div>
+            <span className="text-[10px] text-slate-500 border-l border-slate-800 pl-2">Firestore</span>
           )}
         </div>
 
@@ -1393,56 +1382,29 @@ export default function App() {
                 </div>
               </div>
 
-              {/* EXTREMELY INVENTIVE DEVICE PERSISTENCE VISUALIZER */}
+              {/* SYNC STATUS */}
               <div className="mb-6 bg-slate-950 border border-slate-800 p-4 rounded-2xl shadow-inner">
                 <div className="flex items-center gap-2 mb-3">
-                  <Activity size={14} className="text-cyan-400 shrink-0" />
-                  <p className="text-xs text-white font-extrabold tracking-wider uppercase">Active Connected Devices Syncing Real-Time</p>
+                  <CloudLightning size={14} className="text-cyan-400 shrink-0" />
+                  <p className="text-xs text-white font-extrabold tracking-wider uppercase">Sync Status</p>
                 </div>
-                <p className="text-[11px] text-slate-500 mb-3 font-mono leading-relaxed">
-                  These platform sessions are securely bound to the Express persistent memory layer on server port 3000. Changes are propagated in millisecond triggers.
-                </p>
                 <div className="flex flex-col gap-2">
-                  {connectedDevices.map((dev) => (
-                    <div
-                      key={dev.id}
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-850/80 transition-all text-xs font-mono"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className={`p-1.5 rounded-lg ${dev.isCurrent ? 'bg-cyan-950 text-cyan-400' : 'bg-slate-800 text-slate-400'}`}>
-                          {dev.deviceType === 'Mobile' ? (
-                            <Smartphone size={16} />
-                          ) : dev.deviceType === 'Tablet' ? (
-                            <TabletIcon size={16} />
-                          ) : (
-                            <Laptop size={16} />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-bold text-slate-200">
-                            {dev.browser} browser on {dev.os}
-                          </p>
-                          <p className="text-[9px] text-slate-500 text-slate-400">
-                            Session Identifier: {dev.id}
-                          </p>
-                        </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-850/80 text-xs font-mono">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${wsStatus === 'connected' ? 'bg-emerald-950 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
+                        <CloudLightning size={16} />
                       </div>
-                      <div className="flex items-center gap-2">
-                        {dev.isCurrent && (
-                          <span className="text-[9px] bg-cyan-900/40 border border-cyan-800 text-cyan-400 px-2 py-0.5 rounded-full font-mono">
-                            This Device
-                          </span>
-                        )}
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <div>
+                        <p className="text-[11px] font-bold text-slate-200">
+                          {wsStatus === 'connected' ? 'Firestore Live Sync' : wsStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+                        </p>
+                        <p className="text-[9px] text-slate-500">
+                          {wsStatus === 'connected' ? 'Changes sync across all devices in real-time' : 'Data saved locally, will sync when connected'}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                  {connectedDevices.length === 0 && (
-                    <div className="text-xs text-slate-500 font-mono text-center py-2 flex items-center justify-center gap-1.5">
-                      <CloudLightning size={14} className="text-rose-500" />
-                      <span>Diagnostics checking active nodes...</span>
-                    </div>
-                  )}
+                    <span className={`h-1.5 w-1.5 rounded-full ${wsStatus === 'connected' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`}></span>
+                  </div>
                 </div>
               </div>
 
@@ -1879,8 +1841,7 @@ export default function App() {
 
               {/* Connected details */}
               <div className="pt-4 border-t border-slate-850/60 flex flex-col gap-1.5 font-mono text-[10px] text-slate-500">
-                <p>Status: {wsStatus === 'connected' ? 'Connected Sync Online' : 'Connecting to Node Server...'}</p>
-                <p>ID: {clientId || 'Unassigned Session ID'}</p>
+                <p>Status: {wsStatus === 'connected' ? 'Sync Active via Firestore' : 'Offline (local storage)'}</p>
               </div>
             </motion.div>
           </div>
