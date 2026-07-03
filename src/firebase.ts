@@ -27,19 +27,31 @@ export async function loadRemoteState(): Promise<SharedState | null> {
   return null;
 }
 
-export async function saveRemoteState(state: SharedState): Promise<void> {
+export async function saveRemoteState(state: SharedState): Promise<boolean> {
   try {
     await setDoc(doc(db, STATE_DOC), state);
+    return true;
   } catch (e) {
     console.error('Remote state save failed:', e);
+    return false;
   }
 }
 
-export function subscribeRemoteState(onState: (state: SharedState) => void): () => void {
-  const unsub = onSnapshot(doc(db, STATE_DOC), (snap) => {
-    if (snap.exists()) {
-      onState(snap.data() as SharedState);
+export function subscribeRemoteState(
+  onState: (state: SharedState) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const unsub = onSnapshot(
+    doc(db, STATE_DOC),
+    (snap) => {
+      if (snap.exists()) {
+        onState(snap.data() as SharedState);
+      }
+    },
+    (error) => {
+      console.error('Firestore snapshot error:', error);
+      onError?.(error);
     }
-  });
+  );
   return unsub;
 }

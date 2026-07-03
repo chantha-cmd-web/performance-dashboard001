@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Phone,
@@ -214,6 +214,7 @@ export default function App() {
       try {
         const remote = await loadRemoteState();
         if (remote && remote.sections?.length) {
+          prevSnapshotRef.current = JSON.stringify(remote);
           applyDownloadedState(remote);
           setWsStatus('connected');
           showSyncLog('Synchronized in real-time!', false);
@@ -234,12 +235,35 @@ export default function App() {
 
   // Subscribe to real-time remote updates from other devices
   useEffect(() => {
-    const unsub = subscribeRemoteState((state) => {
-      if (!state) return;
-      applyDownloadedState(state);
-      setWsStatus('connected');
-    });
+    const unsub = subscribeRemoteState(
+      (state) => {
+        if (!state) return;
+        applyDownloadedState(state);
+        setWsStatus('connected');
+      },
+      () => {
+        setWsStatus('disconnected');
+      }
+    );
     return unsub;
+  }, []);
+
+  // Polling fallback: periodically check Firestore for changes missed by onSnapshot
+  const prevSnapshotRef = useRef<string>('');
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const remote = await loadRemoteState();
+        if (!remote || !remote.sections) return;
+        const currJson = JSON.stringify(remote);
+        if (currJson !== prevSnapshotRef.current) {
+          prevSnapshotRef.current = currJson;
+          applyDownloadedState(remote);
+          setWsStatus('connected');
+        }
+      } catch {}
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   // Helper status notice banner logger
@@ -262,7 +286,7 @@ export default function App() {
   };
 
   // Pushes active React configuration state context to remote
-  const pushStateUpdate = (
+  const pushStateUpdate = async (
     nextSections = sections,
     nextOrder = sectionOrder,
     nextProfile = profile,
@@ -277,8 +301,13 @@ export default function App() {
       syncDoc: nextSync,
     };
 
-    localStorage.setItem('par_dashboard_state', JSON.stringify(nextState));
-    saveRemoteState(nextState);
+    const stateJson = JSON.stringify(nextState);
+    localStorage.setItem('par_dashboard_state', stateJson);
+    prevSnapshotRef.current = stateJson;
+    const ok = await saveRemoteState(nextState);
+    if (!ok) {
+      showSyncLog('Sync failed — check Firestore security rules', true);
+    }
   };
 
   // Toggle Edit mode
