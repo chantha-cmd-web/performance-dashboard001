@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Phone,
@@ -177,8 +177,6 @@ export default function App() {
   const [newItemName, setNewItemName] = useState<string>('');
   const [newItemUrl, setNewItemUrl] = useState<string>('');
 
-  const lastVersionRef = useRef<number | undefined>(undefined);
-
   // Initialize Clock
   useEffect(() => {
     const updateTime = () => {
@@ -209,7 +207,7 @@ export default function App() {
     root.style.setProperty('--item-scale', String(theme.itemScale / 100));
   }, [theme]);
 
-  // Load initial state: Firebase -> localStorage -> defaults
+  // Load initial state: remote -> localStorage -> defaults
   useEffect(() => {
     const init = async () => {
       setWsStatus('connecting');
@@ -234,13 +232,12 @@ export default function App() {
     init();
   }, []);
 
-  // Subscribe to real-time Firestore updates from other devices
+  // Subscribe to real-time remote updates from other devices
   useEffect(() => {
     const unsub = subscribeRemoteState((state) => {
-      if (state.version && lastVersionRef.current !== undefined && state.version <= lastVersionRef.current) return;
+      if (!state) return;
       applyDownloadedState(state);
       setWsStatus('connected');
-      showSyncLog('System updated via remote device!', false);
     });
     return unsub;
   }, []);
@@ -254,25 +251,17 @@ export default function App() {
     }, 6000);
   };
 
-  // Safe apply payload state — ignore stale or same-version updates
+  // Safe apply payload state — fully replaces current state
   const applyDownloadedState = (state: any) => {
     if (!state) return;
-    if (state.version && lastVersionRef.current !== undefined && state.version <= lastVersionRef.current) return;
-    if (state.version) lastVersionRef.current = state.version;
-    if (state.sections) setSections(prev => {
-      if (state.sections.length >= prev.length) return state.sections;
-      return prev.map(p => state.sections.find((s: any) => s.id === p.id) || p);
-    });
-    if (state.sectionOrder) setSectionOrder(prev => {
-      if (state.sectionOrder.length >= prev.length) return state.sectionOrder;
-      return [...state.sectionOrder, ...prev.filter((id: string) => !state.sectionOrder.includes(id))];
-    });
+    if (state.sections) setSections(state.sections);
+    if (state.sectionOrder) setSectionOrder(state.sectionOrder);
     if (state.profile) setProfile(state.profile);
     if (state.theme) setTheme(state.theme);
     if (state.syncDoc) setSyncDoc(state.syncDoc);
   };
 
-  // Pushes active React configuration state context to WS server
+  // Pushes active React configuration state context to remote
   const pushStateUpdate = (
     nextSections = sections,
     nextOrder = sectionOrder,
@@ -280,15 +269,12 @@ export default function App() {
     nextTheme = theme,
     nextSync = syncDoc
   ) => {
-    const nextVersion = Date.now();
-    lastVersionRef.current = nextVersion;
     const nextState: SharedState = {
       sections: nextSections,
       sectionOrder: nextOrder,
       profile: nextProfile,
       theme: nextTheme,
       syncDoc: nextSync,
-      version: nextVersion
     };
 
     localStorage.setItem('par_dashboard_state', JSON.stringify(nextState));
@@ -877,7 +863,7 @@ export default function App() {
             {wsStatus === 'connected' ? 'Sync Active' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
           </span>
           {wsStatus === 'connected' && (
-            <span className="text-[10px] text-slate-500 border-l border-slate-800 pl-2">Firestore</span>
+            <span className="text-[10px] text-slate-500 border-l border-slate-800 pl-2">Cloud Sync</span>
           )}
         </div>
 
@@ -1396,7 +1382,7 @@ export default function App() {
                       </div>
                       <div>
                         <p className="text-[11px] font-bold text-slate-200">
-                          {wsStatus === 'connected' ? 'Firestore Live Sync' : wsStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+                          {wsStatus === 'connected' ? 'Cloud Live Sync' : wsStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
                         </p>
                         <p className="text-[9px] text-slate-500">
                           {wsStatus === 'connected' ? 'Changes sync across all devices in real-time' : 'Data saved locally, will sync when connected'}
@@ -1841,7 +1827,7 @@ export default function App() {
 
               {/* Connected details */}
               <div className="pt-4 border-t border-slate-850/60 flex flex-col gap-1.5 font-mono text-[10px] text-slate-500">
-                <p>Status: {wsStatus === 'connected' ? 'Sync Active via Firestore' : 'Offline (local storage)'}</p>
+                <p>Status: {wsStatus === 'connected' ? 'Sync Active (Cloud)' : 'Offline (local storage)'}</p>
               </div>
             </motion.div>
           </div>

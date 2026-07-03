@@ -31,7 +31,7 @@ export async function saveRemoteState(state: SharedState): Promise<void> {
   try {
     await setDoc(doc(db, STATE_DOC), state);
   } catch (e) {
-    console.error('Firebase save failed:', e);
+    console.error('Remote state save failed:', e);
   }
 }
 
