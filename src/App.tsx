@@ -448,9 +448,6 @@ export default function App() {
     localStorage.setItem('par_dashboard_state', stateJson);
     const ok = await saveRemoteState(nextState);
     if (!ok) {
-      // Revert both guards so stale Firestore data is not let in
-      lastAppliedTimeRef.current = prevTimestamp;
-      prevSnapshotRef.current = prevSnapshot;
       showSyncLog('Sync failed — check Firestore security rules', true);
     } else {
       prevSnapshotRef.current = stateJson;
