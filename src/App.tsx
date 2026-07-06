@@ -208,27 +208,36 @@ export default function App() {
     root.style.setProperty('--item-scale', String(theme.itemScale / 100));
   }, [theme]);
 
-  // Load initial state: Firestore first, then localStorage, then defaults
+  // Load initial state: compare timestamps across Firestore + localStorage, use newest
   useEffect(() => {
     const init = async () => {
       setWsStatus('connecting');
+      let bestState: SharedState | null = null;
+      let bestTime = 0;
       try {
         const remote = await loadRemoteState();
         if (remote && remote.sections?.length) {
-          prevSnapshotRef.current = JSON.stringify(remote);
-          if (remote.updatedAt != null) lastAppliedTimeRef.current = remote.updatedAt;
-          applyDownloadedState(remote);
-          setWsStatus('connected');
-          showSyncLog('Synchronized in real-time!', false);
-          return;
+          bestState = remote;
+          bestTime = remote.updatedAt ?? 0;
         }
       } catch {}
       const saved = localStorage.getItem('par_dashboard_state');
       if (saved) {
         try {
           const data = JSON.parse(saved);
-          if (data?.sections?.length) applyDownloadedState(data);
+          if (data?.sections?.length && (data.updatedAt ?? 0) > bestTime) {
+            bestState = data;
+            bestTime = data.updatedAt ?? 0;
+          }
         } catch {}
+      }
+      if (bestState) {
+        prevSnapshotRef.current = JSON.stringify(bestState);
+        if (bestTime > 0) lastAppliedTimeRef.current = bestTime;
+        applyDownloadedState(bestState);
+        setWsStatus('connected');
+        showSyncLog('Synchronized in real-time!', false);
+        return;
       }
       setWsStatus('disconnected');
     };
