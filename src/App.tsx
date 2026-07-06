@@ -448,7 +448,7 @@ export default function App() {
     localStorage.setItem('par_dashboard_state', stateJson);
     const ok = await saveRemoteState(nextState);
     if (!ok) {
-      showSyncLog('Sync failed — check Firestore security rules', true);
+      console.warn('Firestore save failed — localStorage still works');
     } else {
       prevSnapshotRef.current = stateJson;
     }
