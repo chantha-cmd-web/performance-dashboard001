@@ -62,6 +62,7 @@ export interface SharedState {
   theme: ThemeConfig;
   syncDoc: SyncConfig;
   version?: number;
+  updatedAt?: number;
 }
 
 // Types of WS messages

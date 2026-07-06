@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import type { SharedState } from './types';
 
 const firebaseConfig = {
@@ -14,6 +15,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// Authenticate anonymously so Firestore security rules (if auth-required) don't block
+const auth = getAuth(app);
+signInAnonymously(auth).catch((e) => {
+  console.warn('Anonymous auth failed (OK if rules allow public access):', e);
+});
 
 const STATE_DOC = 'state/current';
 

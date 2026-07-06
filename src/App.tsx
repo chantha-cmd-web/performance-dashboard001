@@ -133,6 +133,7 @@ export default function App() {
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [syncNotice, setSyncNotice] = useState<string>('');
   const [isNoticeError, setIsNoticeError] = useState<boolean>(false);
+  const wsRef = useRef<WebSocket | null>(null);
 
   // Layout states
   const [activeSectionId, setActiveSectionId] = useState<string>('operations');
@@ -207,7 +208,7 @@ export default function App() {
     root.style.setProperty('--item-scale', String(theme.itemScale / 100));
   }, [theme]);
 
-  // Load initial state: remote -> localStorage -> defaults
+  // Load initial state: Firestore first, then localStorage, then defaults
   useEffect(() => {
     const init = async () => {
       setWsStatus('connecting');
@@ -215,6 +216,7 @@ export default function App() {
         const remote = await loadRemoteState();
         if (remote && remote.sections?.length) {
           prevSnapshotRef.current = JSON.stringify(remote);
+          if (remote.updatedAt != null) lastAppliedTimeRef.current = remote.updatedAt;
           applyDownloadedState(remote);
           setWsStatus('connected');
           showSyncLog('Synchronized in real-time!', false);
@@ -233,11 +235,28 @@ export default function App() {
     init();
   }, []);
 
+  // Timestamp guard: only apply updates newer than the last applied one
+  // Prevents stale cache data and out-of-order delivery from reverting local changes
+  const lastAppliedTimeRef = useRef<number>(0);
+
   // Subscribe to real-time remote updates from other devices
   useEffect(() => {
     const unsub = subscribeRemoteState(
       (state) => {
         if (!state) return;
+        const stateJson = JSON.stringify(state);
+        // Self-revert guard: skip if this snapshot matches what we last saved
+        if (stateJson === prevSnapshotRef.current) return;
+        // Timestamp guard: skip stale cache data that is not newer than applied
+        if (state.updatedAt != null) {
+          if (state.updatedAt < lastAppliedTimeRef.current) return;
+          lastAppliedTimeRef.current = state.updatedAt;
+        } else if (lastAppliedTimeRef.current > 0) {
+          // No timestamp on incoming data but we've already applied timestamped state
+          // This is stale legacy cache — skip it
+          return;
+        }
+        prevSnapshotRef.current = stateJson;
         applyDownloadedState(state);
         setWsStatus('connected');
       },
@@ -255,15 +274,122 @@ export default function App() {
       try {
         const remote = await loadRemoteState();
         if (!remote || !remote.sections) return;
-        const currJson = JSON.stringify(remote);
-        if (currJson !== prevSnapshotRef.current) {
-          prevSnapshotRef.current = currJson;
-          applyDownloadedState(remote);
-          setWsStatus('connected');
+        const remoteJson = JSON.stringify(remote);
+        // Skip if data matches what we last saved
+        if (remoteJson === prevSnapshotRef.current) return;
+        // Timestamp guard: skip stale cache data
+        if (remote.updatedAt != null) {
+          if (remote.updatedAt < lastAppliedTimeRef.current) return;
+          lastAppliedTimeRef.current = remote.updatedAt;
+        } else if (lastAppliedTimeRef.current > 0) {
+          return;
         }
+        prevSnapshotRef.current = remoteJson;
+        applyDownloadedState(remote);
+        setWsStatus('connected');
       } catch {}
     }, 2000);
     return () => clearInterval(interval);
+  }, []);
+
+  // WebSocket connection for fast real-time sync across devices
+  useEffect(() => {
+    let mounted = true;
+    let wasEverConnected = false;
+    let reconnectTimer: ReturnType<typeof setTimeout>;
+    let failTimer: ReturnType<typeof setTimeout>;
+
+    const connectWs = () => {
+      if (!mounted) return;
+      setWsStatus('connecting');
+
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}`;
+      let ws: WebSocket;
+      try {
+        ws = new WebSocket(wsUrl);
+      } catch {
+        return;
+      }
+      wsRef.current = ws;
+
+      // If no connection within 5s, give up (static hosting like GitHub Pages)
+      failTimer = setTimeout(() => {
+        if (!wasEverConnected && ws.readyState !== WebSocket.OPEN) {
+          ws.close();
+          wsRef.current = null;
+          setWsStatus('disconnected');
+        }
+      }, 5000);
+
+      ws.onopen = () => {
+        if (!mounted) { ws.close(); return; }
+        clearTimeout(failTimer);
+        wasEverConnected = true;
+        setWsStatus('connected');
+        const ua = navigator.userAgent;
+        ws.send(JSON.stringify({
+          type: 'device_register',
+          payload: {
+            os: ua.includes('Win') ? 'Windows' : ua.includes('Mac') ? 'macOS' : ua.includes('Linux') ? 'Linux' : 'Unknown',
+            browser: ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' : ua.includes('Safari') ? 'Safari' : 'Unknown',
+            deviceType: /Mobi|Android|iPhone|iPad/i.test(ua) ? 'Mobile' : 'Desktop'
+          }
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          switch (msg.type) {
+            case 'sync_update':
+              if (msg.payload) {
+                const stateJson = JSON.stringify(msg.payload);
+                if (stateJson === prevSnapshotRef.current) break;
+                if (msg.payload.updatedAt != null) {
+                  if (msg.payload.updatedAt < lastAppliedTimeRef.current) break;
+                  lastAppliedTimeRef.current = msg.payload.updatedAt;
+                } else if (lastAppliedTimeRef.current > 0) {
+                  break;
+                }
+                prevSnapshotRef.current = stateJson;
+                applyDownloadedState(msg.payload);
+              }
+              break;
+            case 'init':
+              setWsStatus('connected');
+              break;
+          }
+        } catch {}
+      };
+
+      ws.onclose = () => {
+        wsRef.current = null;
+        clearTimeout(failTimer);
+        if (!mounted) return;
+        setWsStatus('disconnected');
+        // Only retry if we've previously connected (server exists)
+        if (wasEverConnected) {
+          reconnectTimer = setTimeout(connectWs, 3000);
+        }
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    };
+
+    connectWs();
+
+    return () => {
+      mounted = false;
+      clearTimeout(failTimer);
+      clearTimeout(reconnectTimer);
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
   }, []);
 
   // Helper status notice banner logger
@@ -293,20 +419,39 @@ export default function App() {
     nextTheme = theme,
     nextSync = syncDoc
   ) => {
+    const now = Date.now();
+    // Track our own timestamp BEFORE the Firestore write,
+    // so stale cache snapshots arriving during the write are rejected
+    const prevTimestamp = lastAppliedTimeRef.current;
+    lastAppliedTimeRef.current = now;
+
     const nextState: SharedState = {
       sections: nextSections,
       sectionOrder: nextOrder,
       profile: nextProfile,
       theme: nextTheme,
       syncDoc: nextSync,
+      updatedAt: now,
     };
 
     const stateJson = JSON.stringify(nextState);
+    const prevSnapshot = prevSnapshotRef.current;
     localStorage.setItem('par_dashboard_state', stateJson);
-    prevSnapshotRef.current = stateJson;
     const ok = await saveRemoteState(nextState);
     if (!ok) {
+      // Revert both guards so stale Firestore data is not let in
+      lastAppliedTimeRef.current = prevTimestamp;
+      prevSnapshotRef.current = prevSnapshot;
       showSyncLog('Sync failed — check Firestore security rules', true);
+    } else {
+      prevSnapshotRef.current = stateJson;
+    }
+    // Broadcast via WebSocket for fast real-time sync
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'sync_update',
+        payload: nextState
+      }));
     }
   };
 
