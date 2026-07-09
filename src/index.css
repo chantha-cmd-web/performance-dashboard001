@@ -40,13 +40,14 @@
 
 /* Day mode overrides */
 [data-theme="light"] {
-  --day-bg: #f1f5f9;
-  --day-surface: rgba(255, 255, 255, 0.85);
-  --day-border: rgba(0, 0, 0, 0.08);
+  --bg: #ffffff;
+  --day-bg: #ffffff;
+  --day-surface: #ffffff;
+  --day-border: #1e3a8a;
   --day-text: #0f172a;
   --day-text-secondary: #475569;
-  --day-header-bg: rgba(255, 255, 255, 0.9);
-  --day-header-border: rgba(0, 0, 0, 0.08);
+  --day-header-bg: #ffffff;
+  --day-header-border: rgba(30, 58, 138, 0.15);
 }
 
 [data-theme="light"] .bg-slate-950\/85,
@@ -135,8 +136,8 @@
 
 [data-theme="light"] header,
 [data-theme="light"] footer {
-  background-color: var(--day-header-bg) !important;
-  border-color: var(--day-header-border) !important;
+  background-color: #ffffff !important;
+  border-color: rgba(30, 58, 138, 0.15) !important;
 }
 
 [data-theme="light"] input,
