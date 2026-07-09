@@ -1348,12 +1348,14 @@ export default function App() {
           
           {/* Active section header with local and dynamic filtering */}
           <div className="flex flex-row items-center justify-between gap-2 mb-2 shrink-0">
-            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2"
+              style={{ color: isDayMode ? '#0f172a' : '#f1f5f9' }}>
               <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: activeSection.color, boxShadow: `0 0 8px ${activeSection.color}` }} />
               {isEditMode ? (
                 <input
                   type="text"
-                  className="bg-transparent border-b border-dashed border-cyan-500 outline-none focus:border-solid text-white"
+                  className="bg-transparent border-b border-dashed border-cyan-500 outline-none focus:border-solid"
+                  style={{ color: isDayMode ? '#0f172a' : '#f1f5f9' }}
                   value={activeSection.title}
                   onChange={(e) => handleSectionTitleBlur(activeSection.id, e.target.value)}
                   placeholder="Rename category..."
@@ -1366,11 +1368,18 @@ export default function App() {
 
             {/* Active section Search filtering bar */}
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center bg-slate-900/60 border border-slate-800/80 rounded-full py-1 px-3 focus-within:border-cyan-500 transition">
-                <Search size={12} className="text-slate-500 mr-1.5 shrink-0" />
+              <div
+                className="flex items-center rounded-full py-1 px-3 focus-within:border-cyan-500 transition border"
+                style={{
+                  backgroundColor: isDayMode ? '#f1f5f9' : 'rgba(15,23,42,0.6)',
+                  borderColor: isDayMode ? '#e2e8f0' : 'rgba(51,65,85,0.8)',
+                }}
+              >
+                <Search size={12} className="text-slate-400 mr-1.5 shrink-0" />
                 <input
                   type="text"
-                  className="bg-transparent border-none outline-none text-xs text-white placeholder-slate-500 w-28"
+                  className="bg-transparent border-none outline-none text-xs w-28"
+                  style={{ color: isDayMode ? '#0f172a' : '#f1f5f9' }}
                   placeholder="Filter"
                   value={localSearch[activeSection.id] || ''}
                   onChange={(e) => {
@@ -1379,7 +1388,7 @@ export default function App() {
                   }}
                 />
                 {localSearch[activeSection.id] && (
-                  <X size={11} className="text-slate-400 hover:text-white cursor-pointer ml-1" onClick={() => setLocalSearch(prev => ({ ...prev, [activeSection.id]: '' }))} />
+                  <X size={11} className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer ml-1 transition" onClick={() => setLocalSearch(prev => ({ ...prev, [activeSection.id]: '' }))} />
                 )}
               </div>
 
@@ -1387,7 +1396,12 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => triggerAddItemModal(activeSection.id)}
-                  className="shrink-0 h-7 px-3 rounded-full bg-cyan-900 text-cyan-400 hover:bg-cyan-850 flex items-center gap-1 text-xs font-semibold border border-cyan-800/50 transition cursor-pointer"
+                  className="shrink-0 h-7 px-3 rounded-full flex items-center gap-1 text-xs font-semibold border transition cursor-pointer"
+                  style={{
+                    backgroundColor: isDayMode ? '#ecfeff' : 'rgba(6,182,212,0.15)',
+                    borderColor: isDayMode ? '#a5f3fc' : 'rgba(6,182,212,0.3)',
+                    color: isDayMode ? '#0891b2' : '#22d3ee',
+                  }}
                 >
                   <Plus size={11} />
                   <span>Add</span>
@@ -1397,13 +1411,13 @@ export default function App() {
           </div>
 
           {/* Grid layout of dynamic items - fills remaining screen */}
-          <div className="relative flex-1 min-h-0 overflow-y-hidden rounded-2xl border border-slate-800/60 bg-slate-950/40 backdrop-blur-xl shadow-lg p-5">
+          <div className="relative flex-1 min-h-0 overflow-y-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800/60 bg-white/90 dark:bg-slate-950/40 backdrop-blur-xl shadow-sm p-5 transition-colors duration-300">
             {/* Subtle inner glow */}
-            <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-[0.04] blur-3xl pointer-events-none" style={{ backgroundColor: activeSection.color }} />
+            <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-[0.03] blur-3xl pointer-events-none" style={{ backgroundColor: activeSection.color }} />
             
             {isEditMode && (
-              <div className="mb-3 bg-yellow-950/40 border border-yellow-700/60 rounded-lg p-2 text-[11px] text-yellow-300 flex items-center gap-2">
-                <Info size={12} className="text-yellow-400 shrink-0" />
+              <div className="mb-3 bg-amber-50 dark:bg-yellow-950/40 border border-amber-200 dark:border-yellow-700/60 rounded-xl p-2.5 text-[11px] text-amber-700 dark:text-yellow-300 flex items-center gap-2">
+                <Info size={12} className="text-amber-500 dark:text-yellow-400 shrink-0" />
                 <span>Edit mode — drag, recolor, relink. Push when done.</span>
               </div>
             )}
@@ -1423,10 +1437,10 @@ export default function App() {
 
               if (filteredItems.length === 0) {
                 return (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-900/35 border border-dashed border-slate-800 rounded-xl">
-                    <Search size={28} className="text-slate-600 mb-3" />
-                    <p className="text-sm font-bold text-slate-400">No matching links</p>
-                    <p className="text-[11px] text-slate-500 mt-1">Try resetting filters or check another section.</p>
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-100 dark:bg-slate-900/35 border border-dashed border-slate-300 dark:border-slate-800 rounded-xl">
+                    <Search size={28} className="text-slate-400 dark:text-slate-600 mb-3" />
+                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400">No matching links</p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Try resetting filters or check another section.</p>
                   </div>
                 );
               }
@@ -1439,25 +1453,29 @@ export default function App() {
                         const accentColor = item.color || activeSection.color;
                         const cardBody = (
                           <div
-                            className="relative group flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300 will-change-transform"
+                            className="relative group flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300 will-change-transform cursor-pointer"
                             style={{
-                              background: `linear-gradient(135deg, ${accentColor}0a, ${accentColor}04)`,
-                              border: `1px solid ${accentColor}18`,
-                              boxShadow: `0 1px 3px rgba(0,0,0,0.1), 0 0 0 1px ${accentColor}08 inset`,
-                              backdropFilter: 'blur(8px)',
+                              background: isDayMode ? '#ffffff' : '#ffffff0a',
+                              border: `1.5px solid ${isDayMode ? '#1e3a8a' : '#1e3a8a'}`, // dark blue border
+                              boxShadow: isDayMode
+                                ? '0 1px 3px rgba(30, 58, 138, 0.06), 0 0 0 1px rgba(30, 58, 138, 0.03) inset'
+                                : '0 1px 3px rgba(0,0,0,0.15), 0 0 0 1px rgba(30, 58, 138, 0.15) inset',
+                              backdropFilter: 'blur(4px)',
                             }}
                             onMouseEnter={(e) => {
                               if (isEditMode) return;
-                              e.currentTarget.style.background = `linear-gradient(135deg, ${accentColor}18, ${accentColor}08)`;
-                              e.currentTarget.style.borderColor = `${accentColor}40`;
-                              e.currentTarget.style.boxShadow = `0 0 30px ${accentColor}15, 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px ${accentColor}20 inset`;
+                              e.currentTarget.style.borderColor = '#1e40af';
+                              e.currentTarget.style.boxShadow = isDayMode
+                                ? '0 8px 30px rgba(30, 58, 138, 0.12), 0 0 0 1px rgba(30, 58, 138, 0.06) inset'
+                                : '0 8px 30px rgba(30, 58, 138, 0.2), 0 0 0 1px rgba(30, 58, 138, 0.2) inset';
                               e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
                             }}
                             onMouseLeave={(e) => {
                               if (isEditMode) return;
-                              e.currentTarget.style.background = `linear-gradient(135deg, ${accentColor}0a, ${accentColor}04)`;
-                              e.currentTarget.style.borderColor = `${accentColor}18`;
-                              e.currentTarget.style.boxShadow = `0 1px 3px rgba(0,0,0,0.1), 0 0 0 1px ${accentColor}08 inset`;
+                              e.currentTarget.style.borderColor = '#1e3a8a';
+                              e.currentTarget.style.boxShadow = isDayMode
+                                ? '0 1px 3px rgba(30, 58, 138, 0.06), 0 0 0 1px rgba(30, 58, 138, 0.03) inset'
+                                : '0 1px 3px rgba(0,0,0,0.15), 0 0 0 1px rgba(30, 58, 138, 0.15) inset';
                               e.currentTarget.style.transform = '';
                             }}
                           >
@@ -1470,9 +1488,16 @@ export default function App() {
                                 if (isEditMode) e.preventDefault();
                               }}
                             >
-                              <div className="relative flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-transform duration-300 group-hover:scale-110" style={{
-                                background: `${accentColor}15`,
-                              }}>
+                              <div
+                                className="relative flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md"
+                                style={{
+                                  background: isDayMode ? '#ffffff' : '#ffffff12',
+                                  border: `1.5px solid ${isDayMode ? '#1e3a8a' : '#1e3a8a'}`,
+                                  boxShadow: isDayMode
+                                    ? '0 2px 6px rgba(30, 58, 138, 0.08)'
+                                    : '0 2px 6px rgba(0,0,0,0.15)',
+                                }}
+                              >
                                 {item.svgContent ? (
                                   <span className="w-[18px] h-[18px] flex items-center justify-center" style={{ color: accentColor }} dangerouslySetInnerHTML={{ __html: item.svgContent }} />
                                 ) : (
@@ -1480,29 +1505,60 @@ export default function App() {
                                 )}
                               </div>
 
-                              <span className="text-sm font-semibold text-slate-100 whitespace-nowrap leading-tight tracking-tight group-hover:text-white transition-colors duration-300">
+                              <span
+                                className="text-sm font-semibold whitespace-nowrap leading-tight tracking-tight transition-colors duration-300"
+                                style={{
+                                  color: isDayMode ? '#1e293b' : '#e2e8f0',
+                                }}
+                              >
                                 {item.name}
                               </span>
                             </a>
 
                             {!isEditMode ? (
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-slate-600 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate max-w-[200px] hidden md:block">
+                                <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate max-w-[200px] hidden md:block"
+                                  style={{ color: isDayMode ? '#94a3b8' : '#475569' }}>
                                   {item.hideUrl ? '' : item.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                                 </span>
-                                <ExternalLink size={13} className="text-slate-500 group-hover:text-slate-300 transition-all shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5" />
+                                <ExternalLink size={13}
+                                  className="transition-all shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5"
+                                  style={{ color: isDayMode ? '#64748b' : '#64748b' }} />
                               </div>
                             ) : (
                               <div className="flex items-center gap-1 shrink-0">
-                                <button onClick={() => handleItemSortOrder(activeSection.id, itemIdx, 'up')} disabled={itemIdx === 0} className="h-7 w-7 rounded-xl hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-25 transition" title="Up"><ChevronUp size={11} /></button>
-                                <button onClick={() => handleItemSortOrder(activeSection.id, itemIdx, 'down')} disabled={itemIdx === activeSection.items.length - 1} className="h-7 w-7 rounded-xl hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-25 transition" title="Down"><ChevronDown size={11} /></button>
-                                <select className="bg-slate-800 text-slate-100 text-[10px] py-1 px-2 rounded-xl border border-slate-700 outline-none max-w-[65px] cursor-pointer" value={activeSection.id} onChange={(e) => handleMoveToSection(activeSection.id, item.id, e.target.value)} title="Move"><option value="">Move</option>{sections.map(s => (<option key={s.id} value={s.id}>{s.title}</option>))}</select>
-                                <button onClick={() => { setSvgPickerSectionId(activeSection.id); setSvgPickerItemId(item.id); setSvgPickerOpen(true); }} className="h-7 w-7 rounded-xl hover:bg-slate-800 flex items-center justify-center text-slate-400 transition" title="Icon"><Palette size={11} /></button>
-                                <div className="relative h-5 w-5 rounded-lg overflow-hidden border border-slate-700 flex items-center justify-center">
+                                <button onClick={() => handleItemSortOrder(activeSection.id, itemIdx, 'up')} disabled={itemIdx === 0}
+                                  className="h-7 w-7 rounded-xl flex items-center justify-center disabled:opacity-25 transition"
+                                  style={{ color: isDayMode ? '#64748b' : '#64748b', backgroundColor: isDayMode ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}
+                                  title="Up"><ChevronUp size={11} /></button>
+                                <button onClick={() => handleItemSortOrder(activeSection.id, itemIdx, 'down')} disabled={itemIdx === activeSection.items.length - 1}
+                                  className="h-7 w-7 rounded-xl flex items-center justify-center disabled:opacity-25 transition"
+                                  style={{ color: isDayMode ? '#64748b' : '#64748b', backgroundColor: isDayMode ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}
+                                  title="Down"><ChevronDown size={11} /></button>
+                                <select className="py-1 px-2 rounded-xl outline-none max-w-[65px] cursor-pointer text-[10px] transition"
+                                  style={{
+                                    backgroundColor: isDayMode ? '#f1f5f9' : 'rgba(255,255,255,0.08)',
+                                    border: `1px solid ${isDayMode ? '#e2e8f0' : 'rgba(255,255,255,0.1)'}`,
+                                    color: isDayMode ? '#334155' : '#e2e8f0',
+                                  }}
+                                  value={activeSection.id} onChange={(e) => handleMoveToSection(activeSection.id, item.id, e.target.value)} title="Move">
+                                  <option value="">Move</option>{sections.map(s => (<option key={s.id} value={s.id}>{s.title}</option>))}</select>
+                                <button onClick={() => { setSvgPickerSectionId(activeSection.id); setSvgPickerItemId(item.id); setSvgPickerOpen(true); }}
+                                  className="h-7 w-7 rounded-xl flex items-center justify-center transition"
+                                  style={{ color: isDayMode ? '#64748b' : '#64748b', backgroundColor: isDayMode ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}
+                                  title="Icon"><Palette size={11} /></button>
+                                <div className="relative h-5 w-5 rounded-lg overflow-hidden flex items-center justify-center"
+                                  style={{ border: `1px solid ${isDayMode ? '#cbd5e1' : 'rgba(255,255,255,0.15)'}` }}>
                                   <input type="color" className="absolute inset-0 cursor-pointer h-8 w-8 border-none p-0 bg-transparent -translate-x-1 -translate-y-1" value={accentColor} onChange={(e) => handleItemColorChange(activeSection.id, item.id, e.target.value)} title="Color" />
                                 </div>
-                                <button onClick={() => handleEditLinkRequest(activeSection.id, item)} className="h-7 w-7 rounded-xl hover:bg-slate-800 flex items-center justify-center text-cyan-400 transition" title="Edit"><Pencil size={11} /></button>
-                                <button onClick={() => handleDeleteItem(activeSection.id, item.id, item.name)} className="h-7 w-7 rounded-xl hover:bg-rose-950/40 text-rose-500 flex items-center justify-center transition" title="Delete"><Trash size={11} /></button>
+                                <button onClick={() => handleEditLinkRequest(activeSection.id, item)}
+                                  className="h-7 w-7 rounded-xl flex items-center justify-center transition"
+                                  style={{ color: isDayMode ? '#0891b2' : '#22d3ee', backgroundColor: isDayMode ? '#ecfeff' : 'rgba(6,182,212,0.08)' }}
+                                  title="Edit"><Pencil size={11} /></button>
+                                <button onClick={() => handleDeleteItem(activeSection.id, item.id, item.name)}
+                                  className="h-7 w-7 rounded-xl flex items-center justify-center transition"
+                                  style={{ color: '#ef4444', backgroundColor: isDayMode ? '#fef2f2' : 'rgba(239,68,68,0.08)' }}
+                                  title="Delete"><Trash size={11} /></button>
                               </div>
                             )}
                           </div>
