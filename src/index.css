@@ -38,6 +38,12 @@
   transform-origin: center center;
 }
 
+/* Glass border pulse for premium cards */
+@keyframes glass-border-pulse {
+  0%, 100% { border-color: rgba(30, 58, 138, 0.4); }
+  50% { border-color: rgba(30, 58, 138, 0.65); }
+}
+
 /* Day mode overrides */
 [data-theme="light"] {
   --bg: #ffffff;

@@ -999,14 +999,17 @@ export default function App() {
 
   const userRole: UserRole = authUser?.role || 'admin';
   const isSuperAdmin = userRole === 'super_admin';
+  const hasBgImage = !!theme.backgroundImage;
+  const isDarkGlass = hasBgImage || !isDayMode;
 
   return (
     <div
       data-theme={isDayMode ? 'light' : 'dark'}
-      className="relative min-h-screen text-slate-100 flex flex-col font-sans overflow-x-hidden"
+      className="relative min-h-screen flex flex-col font-sans overflow-x-hidden"
       style={{
-        backgroundColor: 'var(--bg)',
-        backgroundImage: theme.backgroundImage ? `url(${theme.backgroundImage})` : 'none',
+        color: isDarkGlass ? '#e2e8f0' : '#0f172a',
+        backgroundColor: hasBgImage ? '#0f172a' : (isDayMode ? '#ffffff' : '#0b1120'),
+        backgroundImage: hasBgImage ? `url(${theme.backgroundImage})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
@@ -1014,10 +1017,10 @@ export default function App() {
       }}
     >
       {/* Dynamic Overlay if custom background is set */}
-      {theme.backgroundImage && (
+      {hasBgImage && (
         <div
           className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.55)', zIndex: 0 }}
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', zIndex: 0 }}
         />
       )}
 
@@ -1046,13 +1049,14 @@ export default function App() {
       </AnimatePresence>
 
       {/* REAL-TIME SYSTEM HEADER & NAVIGATION - Minimal */}
-      <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/60 px-4 md:px-8 py-3 flex items-center justify-between shrink-0" style={{ zIndex: 40 }}>
+      <header className="sticky top-0 z-40 px-4 md:px-8 py-3 flex items-center justify-between shrink-0" style={{ zIndex: 40, background: isDarkGlass ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderBottom: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.25)' : '1px solid rgba(30, 58, 138, 0.1)' }}>
         <div className="flex items-center gap-4">
           {/* Hamburger menu button for sidebar */}
           <button
-            className="flex text-slate-300 h-9 w-9 items-center justify-center rounded-xl hover:bg-slate-800/70 transition-colors cursor-pointer"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label={sidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
+            className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors cursor-pointer"
+            style={{ color: isDarkGlass ? '#e2e8f0' : '#475569' }}
           >
             <div className="flex flex-col gap-1 items-center justify-center">
               <span className={`block h-[2px] w-5 rounded-full bg-current transition-all duration-300 ${!sidebarOpen ? '' : 'translate-y-[3px] rotate-45'}`} />
@@ -1063,39 +1067,40 @@ export default function App() {
         </div>
 
         {/* Sync status indicator */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800/60 text-xs text-slate-400 font-mono shadow-inner">
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono" style={{ background: isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)', color: isDarkGlass ? '#94a3b8' : '#64748b', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
           <span className="relative flex h-2 w-2">
             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${wsStatus === 'connected' ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
             <span className={`relative inline-flex rounded-full h-2 w-2 ${wsStatus === 'connected' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
           </span>
-          <span className="font-semibold text-slate-300">
+          <span className="font-semibold" style={{ color: isDarkGlass ? '#e2e8f0' : '#475569' }}>
             {wsStatus === 'connected' ? 'Sync Active' : wsStatus === 'connecting' ? 'Connecting...' : 'Offline'}
           </span>
           {wsStatus === 'connected' && (
-            <span className="text-[10px] text-slate-500 border-l border-slate-800 pl-2">Cloud Sync</span>
+            <span className="text-[10px] pl-2" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.3)' : '#94a3b8', borderLeft: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)' }}>Cloud Sync</span>
           )}
         </div>
 
         {/* Real-time clocks */}
         <div className="hidden md:flex flex-col items-end shrink-0">
-          <span className="text-white text-base font-bold font-mono tracking-wider">{timeStr}</span>
-          <span className="text-[10px] text-slate-400 font-semibold tracking-wide">{dateStr}</span>
+          <span className="text-base font-bold font-mono tracking-wider" style={{ color: isDarkGlass ? '#ffffff' : '#0f172a' }}>{timeStr}</span>
+          <span className="text-[10px] font-semibold tracking-wide" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.5)' : '#64748b' }}>{dateStr}</span>
         </div>
 
         {/* Multi Mode Controls */}
         <div className="flex items-center gap-2">
           {/* Universal searching bar */}
-          <div className="hidden sm:flex items-center bg-slate-900/65 border border-slate-800/80 rounded-full py-1.5 px-3 focus-within:border-cyan-500 transition shadow-inner">
-            <Search size={14} className="text-slate-500 mr-2" />
+          <div className="hidden sm:flex items-center rounded-full py-1.5 px-3 focus-within:border-cyan-500 transition" style={{ background: isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+            <Search size={14} className="mr-2" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.4)' : '#94a3b8' }} />
             <input
               type="text"
-              className="bg-transparent border-none outline-none text-xs text-white placeholder-slate-500 w-36 focus:w-44 transition-all duration-300"
+              className="bg-transparent border-none outline-none text-xs w-36 focus:w-44 transition-all duration-300"
+              style={{ color: isDarkGlass ? '#ffffff' : '#0f172a' }}
               placeholder="Search reports..."
               value={globalSearch}
               onChange={(e) => setGlobalSearch(e.target.value)}
             />
             {globalSearch && (
-              <X size={14} className="text-slate-400 hover:text-white cursor-pointer ml-1.5" onClick={() => setGlobalSearch('')} />
+              <X size={14} className="cursor-pointer ml-1.5 transition" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.4)' : '#94a3b8' }} onClick={() => setGlobalSearch('')} />
             )}
           </div>
 
@@ -1103,7 +1108,10 @@ export default function App() {
           {isSuperAdmin && !isEditMode ? (
             <button
               onClick={toggleEditMode}
-              className="h-10 pl-3.5 pr-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-850 flex items-center gap-2 text-xs font-semibold cursor-pointer shadow-md transition"
+              className="h-10 pl-3.5 pr-4 rounded-xl flex items-center gap-2 text-xs font-semibold cursor-pointer transition"
+              style={{ background: isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)', color: isDarkGlass ? '#e2e8f0' : '#475569', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = isDarkGlass ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.95)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)'; }}
               title="Edit layout configuration, custom icons, coloring"
             >
               <Pencil size={14} className="text-cyan-400" />
@@ -1121,7 +1129,8 @@ export default function App() {
               </button>
               <button
                 onClick={cancelLayoutEdits}
-                className="h-10 pl-3.5 pr-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 flex items-center gap-1.5 text-xs font-medium cursor-pointer shadow-md transition"
+                className="h-10 pl-3.5 pr-4 rounded-xl flex items-center gap-1.5 text-xs font-medium cursor-pointer transition"
+                style={{ background: isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)', color: isDarkGlass ? '#94a3b8' : '#64748b', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
                 title="Cancel modification layout"
               >
                 <RotateCcw size={14} />
@@ -1133,7 +1142,10 @@ export default function App() {
           {/* Day/Night mode toggle */}
           <button
             onClick={toggleDayMode}
-            className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-amber-400 hover:bg-slate-850 shadow-md cursor-pointer transition"
+            className="h-10 w-10 flex items-center justify-center rounded-xl cursor-pointer transition"
+            style={{ background: isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)', color: isDarkGlass ? '#94a3b8' : '#64748b', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#d97706'; e.currentTarget.style.background = isDarkGlass ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.95)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = isDarkGlass ? '#94a3b8' : '#64748b'; e.currentTarget.style.background = isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)'; }}
             title={isDayMode ? 'Switch to Dark Mode' : 'Switch to Day Mode'}
           >
             {isDayMode ? <Moon size={18} /> : <Sun size={18} />}
@@ -1143,7 +1155,10 @@ export default function App() {
           {isSuperAdmin && (
             <button
               onClick={() => setSettingsModalOpen(true)}
-              className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-cyan-400 hover:bg-slate-850 shadow-md cursor-pointer transition"
+              className="h-10 w-10 flex items-center justify-center rounded-xl cursor-pointer transition"
+              style={{ background: isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)', color: isDarkGlass ? '#94a3b8' : '#64748b', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#22d3ee'; e.currentTarget.style.background = isDarkGlass ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.95)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = isDarkGlass ? '#94a3b8' : '#64748b'; e.currentTarget.style.background = isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)'; }}
               title="System Settings"
             >
               <Settings size={18} />
@@ -1154,7 +1169,10 @@ export default function App() {
           <div className="relative">
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="h-10 pl-2 pr-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 hover:text-white flex items-center gap-2 text-xs font-medium shadow-md transition cursor-pointer"
+              className="h-10 pl-2 pr-3.5 rounded-xl flex items-center gap-2 text-xs font-medium cursor-pointer transition"
+              style={{ background: isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)', color: isDarkGlass ? '#e2e8f0' : '#475569', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = isDarkGlass ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.95)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = isDarkGlass ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)'; }}
             >
               <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-white text-[10px]">
                 {authUser?.avatarInitials || profile.avatarInitials}
@@ -1171,9 +1189,10 @@ export default function App() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-56 rounded-2xl bg-slate-950/95 border border-slate-800/80 p-2 shadow-2xl backdrop-blur-xl z-40"
+                    className="absolute right-0 mt-2 w-56 rounded-2xl p-2 shadow-2xl z-40"
+                    style={{ background: isDarkGlass ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.9)', border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
                   >
-                    <div className="p-3 border-b border-slate-800/60 mb-2">
+                    <div className="p-3 mb-2" style={{ borderBottom: isDarkGlass ? '1px solid rgba(30,58,138,0.2)' : '1px solid rgba(30,58,138,0.1)' }}>
                       <p className="text-xs text-slate-400 font-semibold tracking-wide">AUTHENTICATED AS</p>
                       <p className="text-sm font-bold text-white truncate mt-0.5">{authUser?.name || profile.name}</p>
                       <p className="text-xs text-cyan-400 font-medium truncate mt-0.5">{authUser?.role === 'super_admin' ? 'Super Administrator' : authUser?.role === 'admin' ? 'Administrator' : profile.role}</p>
@@ -1349,13 +1368,13 @@ export default function App() {
           {/* Active section header with local and dynamic filtering */}
           <div className="flex flex-row items-center justify-between gap-2 mb-2 shrink-0">
             <h1 className="text-xl font-bold tracking-tight flex items-center gap-2"
-              style={{ color: '#0f172a' }}>
+              style={{ color: isDarkGlass ? '#ffffff' : '#0f172a' }}>
               <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: activeSection.color, boxShadow: `0 0 8px ${activeSection.color}` }} />
               {isEditMode ? (
                 <input
                   type="text"
                   className="bg-transparent border-b border-dashed border-cyan-500 outline-none focus:border-solid"
-                  style={{ color: '#0f172a' }}
+                  style={{ color: isDarkGlass ? '#ffffff' : '#0f172a' }}
                   value={activeSection.title}
                   onChange={(e) => handleSectionTitleBlur(activeSection.id, e.target.value)}
                   placeholder="Rename category..."
@@ -1371,15 +1390,17 @@ export default function App() {
               <div
                 className="flex items-center rounded-full py-1 px-3 focus-within:border-blue-500 transition border"
                 style={{
-                  backgroundColor: '#ffffff',
-                  borderColor: '#1e3a8a',
+                  background: isDarkGlass ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  borderColor: isDarkGlass ? 'rgba(30, 58, 138, 0.45)' : '#1e3a8a',
                 }}
               >
-                <Search size={12} className="text-slate-400 mr-1.5 shrink-0" />
+                <Search size={12} className="mr-1.5 shrink-0" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.5)' : '#94a3b8' }} />
                 <input
                   type="text"
                   className="bg-transparent border-none outline-none text-xs w-28"
-                  style={{ color: '#0f172a' }}
+                  style={{ color: isDarkGlass ? '#ffffff' : '#0f172a' }}
                   placeholder="Filter"
                   value={localSearch[activeSection.id] || ''}
                   onChange={(e) => {
@@ -1388,7 +1409,7 @@ export default function App() {
                   }}
                 />
                 {localSearch[activeSection.id] && (
-                  <X size={11} className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer ml-1 transition" onClick={() => setLocalSearch(prev => ({ ...prev, [activeSection.id]: '' }))} />
+                  <X size={11} className="cursor-pointer ml-1 transition" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.5)' : '#94a3b8' }} onClick={() => setLocalSearch(prev => ({ ...prev, [activeSection.id]: '' }))} />
                 )}
               </div>
 
@@ -1398,9 +1419,11 @@ export default function App() {
                   onClick={() => triggerAddItemModal(activeSection.id)}
                   className="shrink-0 h-7 px-3 rounded-full flex items-center gap-1 text-xs font-semibold border transition cursor-pointer"
                   style={{
-                    backgroundColor: '#ffffff',
-                    borderColor: '#1e3a8a',
-                    color: '#1e3a8a',
+                    background: isDarkGlass ? 'rgba(255, 255, 255, 0.1)' : '#ffffff',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    borderColor: isDarkGlass ? 'rgba(30, 58, 138, 0.5)' : '#1e3a8a',
+                    color: isDarkGlass ? '#ffffff' : '#1e3a8a',
                   }}
                 >
                   <Plus size={11} />
@@ -1411,12 +1434,28 @@ export default function App() {
           </div>
 
           {/* Grid layout of dynamic items - fills remaining screen */}
-          <div className="relative flex-1 min-h-0 overflow-y-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-white/5 backdrop-blur-xl shadow-sm p-5 transition-colors duration-300">
+          <div className="relative flex-1 min-h-0 overflow-y-hidden rounded-2xl p-5 transition-colors duration-300"
+            style={{
+              background: isDarkGlass ? 'rgba(15, 23, 42, 0.35)' : 'rgba(255, 255, 255, 0.5)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)',
+              boxShadow: isDarkGlass ? '0 8px 40px rgba(0,0,0,0.15)' : '0 4px 20px rgba(30,58,138,0.05)',
+            }}
+          >
             {/* Subtle inner glow */}
             <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-[0.03] blur-3xl pointer-events-none" style={{ backgroundColor: activeSection.color }} />
             
             {isEditMode && (
-              <div className="mb-3 bg-amber-50 dark:bg-yellow-950/40 border border-amber-200 dark:border-yellow-700/60 rounded-xl p-2.5 text-[11px] text-amber-700 dark:text-yellow-300 flex items-center gap-2">
+              <div className="mb-3 rounded-xl p-2.5 text-[11px] flex items-center gap-2"
+                style={{
+                  background: isDarkGlass ? 'rgba(251, 191, 36, 0.1)' : 'rgba(254, 243, 199, 0.7)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: isDarkGlass ? '1px solid rgba(251, 191, 36, 0.2)' : '1px solid rgba(251, 191, 36, 0.4)',
+                  color: isDarkGlass ? '#fbbf24' : '#92400e',
+                }}
+              >
                 <Info size={12} className="text-amber-500 dark:text-yellow-400 shrink-0" />
                 <span>Edit mode — drag, recolor, relink. Push when done.</span>
               </div>
@@ -1437,10 +1476,17 @@ export default function App() {
 
               if (filteredItems.length === 0) {
                 return (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-white border border-dashed border-blue-200 dark:border-slate-800 rounded-xl">
-                    <Search size={28} className="text-slate-300 dark:text-slate-600 mb-3" />
-                    <p className="text-sm font-bold text-slate-400 dark:text-slate-400">No matching links</p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Try resetting filters or check another section.</p>
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 rounded-xl"
+                    style={{
+                      background: isDarkGlass ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.7)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: isDarkGlass ? '1px dashed rgba(30, 58, 138, 0.3)' : '1px dashed rgba(30, 58, 138, 0.2)',
+                    }}
+                  >
+                    <Search size={28} className="mb-3" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.3)' : '#94a3b8' }} />
+                    <p className="text-sm font-bold" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.6)' : '#64748b' }}>No matching links</p>
+                    <p className="text-[11px] mt-1" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.35)' : '#94a3b8' }}>Try resetting filters or check another section.</p>
                   </div>
                 );
               }
@@ -1455,21 +1501,33 @@ export default function App() {
                           <div
                             className="relative group flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300 will-change-transform cursor-pointer"
                             style={{
-                              background: '#ffffff',
-                              border: '1.5px solid #1e3a8a',
-                              boxShadow: '0 2px 8px rgba(30, 58, 138, 0.08), 0 0 0 1px rgba(30, 58, 138, 0.04) inset',
+                              background: isDarkGlass ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.75)',
+                              backdropFilter: 'blur(16px)',
+                              WebkitBackdropFilter: 'blur(16px)',
+                              border: '1.5px solid rgba(30, 58, 138, 0.5)',
+                              boxShadow: isDarkGlass
+                                ? '0 8px 32px rgba(0,0,0,0.2), 0 0 0 1px rgba(30,58,138,0.12) inset, 0 0 40px rgba(30,58,138,0.06)'
+                                : '0 4px 16px rgba(30,58,138,0.08), 0 0 0 1px rgba(30,58,138,0.04) inset',
                             }}
                             onMouseEnter={(e) => {
                               if (isEditMode) return;
-                              e.currentTarget.style.borderColor = '#1e40af';
-                              e.currentTarget.style.boxShadow = '0 8px 32px rgba(30, 58, 138, 0.15), 0 0 0 1px rgba(30, 58, 138, 0.08) inset';
-                              e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
+                              e.currentTarget.style.borderColor = 'rgba(30, 64, 175, 0.7)';
+                              e.currentTarget.style.boxShadow = isDarkGlass
+                                ? '0 12px 48px rgba(0,0,0,0.3), 0 0 0 1px rgba(30,64,175,0.3) inset, 0 0 60px rgba(30,58,138,0.12)'
+                                : '0 12px 40px rgba(30,58,138,0.15), 0 0 0 1px rgba(30,64,175,0.1) inset';
+                              e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                              e.currentTarget.style.backdropFilter = 'blur(20px)';
+                              e.currentTarget.style.WebkitBackdropFilter = 'blur(20px)';
                             }}
                             onMouseLeave={(e) => {
                               if (isEditMode) return;
-                              e.currentTarget.style.borderColor = '#1e3a8a';
-                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(30, 58, 138, 0.08), 0 0 0 1px rgba(30, 58, 138, 0.04) inset';
+                              e.currentTarget.style.borderColor = 'rgba(30, 58, 138, 0.5)';
+                              e.currentTarget.style.boxShadow = isDarkGlass
+                                ? '0 8px 32px rgba(0,0,0,0.2), 0 0 0 1px rgba(30,58,138,0.12) inset, 0 0 40px rgba(30,58,138,0.06)'
+                                : '0 4px 16px rgba(30,58,138,0.08), 0 0 0 1px rgba(30,58,138,0.04) inset';
                               e.currentTarget.style.transform = '';
+                              e.currentTarget.style.backdropFilter = 'blur(16px)';
+                              e.currentTarget.style.WebkitBackdropFilter = 'blur(16px)';
                             }}
                           >
                             <a
@@ -1482,11 +1540,27 @@ export default function App() {
                               }}
                             >
                               <div
-                                className="relative flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md"
+                                className="relative flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
                                 style={{
-                                  background: '#ffffff',
-                                  border: '1.5px solid #1e3a8a',
-                                  boxShadow: '0 2px 8px rgba(30, 58, 138, 0.1)',
+                                  background: isDarkGlass ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.9)',
+                                  backdropFilter: 'blur(8px)',
+                                  WebkitBackdropFilter: 'blur(8px)',
+                                  border: '1.5px solid rgba(30, 58, 138, 0.45)',
+                                  boxShadow: isDarkGlass
+                                    ? '0 4px 16px rgba(0,0,0,0.15), 0 0 24px rgba(30,58,138,0.08)'
+                                    : '0 2px 8px rgba(30,58,138,0.1)',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.boxShadow = isDarkGlass
+                                    ? '0 8px 32px rgba(0,0,0,0.25), 0 0 40px rgba(30,58,138,0.15)'
+                                    : '0 8px 24px rgba(30,58,138,0.18)';
+                                  e.currentTarget.style.borderColor = 'rgba(30, 64, 175, 0.6)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.boxShadow = isDarkGlass
+                                    ? '0 4px 16px rgba(0,0,0,0.15), 0 0 24px rgba(30,58,138,0.08)'
+                                    : '0 2px 8px rgba(30,58,138,0.1)';
+                                  e.currentTarget.style.borderColor = 'rgba(30, 58, 138, 0.45)';
                                 }}
                               >
                                 {item.svgContent ? (
@@ -1497,9 +1571,9 @@ export default function App() {
                               </div>
 
                               <span
-                                className="text-sm font-semibold whitespace-nowrap leading-tight tracking-tight transition-colors duration-300"
+                                className="text-sm font-bold whitespace-nowrap leading-tight tracking-tight transition-colors duration-300"
                                 style={{
-                                  color: '#1e293b',
+                                  color: isDarkGlass ? '#ffffff' : '#0f172a',
                                 }}
                               >
                                 {item.name}
@@ -1509,12 +1583,12 @@ export default function App() {
                             {!isEditMode ? (
                               <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate max-w-[200px] hidden md:block"
-                                  style={{ color: '#94a3b8' }}>
+                                  style={{ color: isDarkGlass ? 'rgba(255,255,255,0.5)' : '#94a3b8' }}>
                                   {item.hideUrl ? '' : item.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                                 </span>
                                 <ExternalLink size={13}
                                   className="transition-all shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5"
-                                  style={{ color: '#94a3b8' }} />
+                                  style={{ color: isDarkGlass ? 'rgba(255,255,255,0.5)' : '#94a3b8' }} />
                               </div>
                             ) : (
                               <div className="flex items-center gap-1 shrink-0">
@@ -1577,7 +1651,7 @@ export default function App() {
       </div>
 
       {/* SYSTEM BOTTOM BAR */}
-      <footer className="shrink-0 bg-slate-900/90 backdrop-blur-lg border-t border-slate-800/60 px-6 py-2.5 flex flex-row items-center justify-between">
+      <footer className="shrink-0 px-6 py-2.5 flex flex-row items-center justify-between" style={{ background: isDarkGlass ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderTop: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.25)' : '1px solid rgba(30, 58, 138, 0.1)' }}>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2.5">
             <div className="h-6 w-6 rounded-md bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center shadow-sm shadow-cyan-900/30">
@@ -1585,9 +1659,9 @@ export default function App() {
             </div>
             <span className="text-xs font-bold text-white tracking-tight">PAR</span>
           </div>
-          <span className="text-[10px] text-slate-600 font-mono">&copy; 2026 PAR System</span>
-          <span className="h-3 w-px bg-slate-700/60" />
-          <span className="text-[10px] text-slate-500 font-mono">រក្សាសិទ្ធិគ្រប់យ៉ាង</span>
+          <span className="text-[10px] font-mono" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.3)' : '#94a3b8' }}>&copy; 2026 PAR System</span>
+          <span className="h-3 w-px" style={{ backgroundColor: isDarkGlass ? 'rgba(30,58,138,0.3)' : 'rgba(30,58,138,0.15)' }} />
+          <span className="text-[10px] font-mono" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.25)' : '#94a3b8' }}>រក្សាសិទ្ធិគ្រប់យ៉ាង</span>
         </div>
 
         <div className="flex items-center gap-4">
@@ -1596,11 +1670,11 @@ export default function App() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
             </span>
-            <span className="text-[10px] text-emerald-400/80 font-mono font-medium">Connected</span>
+            <span className="text-[10px] font-mono font-medium" style={{ color: isDarkGlass ? 'rgba(52,211,153,0.7)' : '#059669' }}>Connected</span>
           </div>
-          <span className="h-3 w-px bg-slate-700/60" />
-          <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
-            <Cloud size={10} className="text-slate-600" />
+          <span className="h-3 w-px" style={{ backgroundColor: isDarkGlass ? 'rgba(30,58,138,0.3)' : 'rgba(30,58,138,0.15)' }} />
+          <div className="flex items-center gap-2 text-[10px] font-mono" style={{ color: isDarkGlass ? 'rgba(255,255,255,0.35)' : '#94a3b8' }}>
+            <Cloud size={10} style={{ color: isDarkGlass ? 'rgba(255,255,255,0.3)' : '#94a3b8' }} />
             <span>Cloud Sync v3.0</span>
           </div>
         </div>
@@ -1615,8 +1689,9 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+              className="absolute inset-0 backdrop-blur-md"
               onClick={() => setSettingsModalOpen(false)}
+              style={{ background: isDarkGlass ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.3)' }}
             />
 
             {/* Main Modal body */}
@@ -1624,20 +1699,21 @@ export default function App() {
               initial={{ scale: 0.93, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.93, opacity: 0, y: 15 }}
-              className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-slate-900 border border-slate-800 p-6 rounded-3xl text-sm text-slate-200 shadow-2xl"
-              style={{ zIndex: 100 }}
+              className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 rounded-3xl text-sm shadow-2xl"
+              style={{ zIndex: 100, background: isDarkGlass ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.9)', border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', color: isDarkGlass ? '#e2e8f0' : '#0f172a' }}
             >
               {/* Close Button element */}
               <button
                 onClick={() => setSettingsModalOpen(false)}
-                className="absolute top-5 right-5 h-8 w-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition border border-slate-700"
+                className="absolute top-5 right-5 h-8 w-8 rounded-full flex items-center justify-center transition"
+                style={{ background: isDarkGlass ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', border: isDarkGlass ? '1px solid rgba(30,58,138,0.3)' : '1px solid rgba(30,58,138,0.15)', color: isDarkGlass ? '#94a3b8' : '#64748b' }}
               >
                 <X size={16} />
               </button>
 
-              <div className="flex items-center gap-2.5 mb-6 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5 mb-6 pb-3" style={{ borderBottom: isDarkGlass ? '1px solid rgba(30,58,138,0.2)' : '1px solid rgba(30,58,138,0.1)' }}>
                 <Settings size={20} className="text-cyan-400" />
-                <h2 className="text-lg font-black text-white tracking-tight">System Settings & Sync Config</h2>
+                <h2 className="text-lg font-black tracking-tight" style={{ color: isDarkGlass ? '#ffffff' : '#0f172a' }}>System Settings & Sync Config</h2>
               </div>
 
               {/* SECTION 1: PROFILE MANAGEMENT */}
