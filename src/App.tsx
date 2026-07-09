@@ -1397,9 +1397,12 @@ export default function App() {
           </div>
 
           {/* Grid layout of dynamic items - fills remaining screen */}
-          <div className="bg-slate-950/60 border border-slate-800/60 rounded-2xl p-4 backdrop-blur-md shadow-lg flex-1 min-h-0 overflow-y-hidden">
+          <div className="relative flex-1 min-h-0 overflow-y-hidden rounded-2xl border border-slate-800/60 bg-slate-950/40 backdrop-blur-xl shadow-lg p-5">
+            {/* Subtle inner glow */}
+            <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-[0.04] blur-3xl pointer-events-none" style={{ backgroundColor: activeSection.color }} />
+            
             {isEditMode && (
-              <div className="mb-2 bg-yellow-950/40 border border-yellow-700/60 rounded-lg p-2 text-[11px] text-yellow-300 flex items-center gap-2">
+              <div className="mb-3 bg-yellow-950/40 border border-yellow-700/60 rounded-lg p-2 text-[11px] text-yellow-300 flex items-center gap-2">
                 <Info size={12} className="text-yellow-400 shrink-0" />
                 <span>Edit mode — drag, recolor, relink. Push when done.</span>
               </div>
@@ -1431,29 +1434,30 @@ export default function App() {
               const grid = (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy}>
-                    <div className="grid gap-[9px] pr-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))' }}>
+                    <div className="grid gap-3 pr-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))' }}>
                       {filteredItems.map((item, itemIdx) => {
                         const accentColor = item.color || activeSection.color;
                         const cardBody = (
                           <div
-                            className="relative group flex items-center gap-3.5 px-10 py-4 rounded-full transition-all"
+                            className="relative group flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300 will-change-transform"
                             style={{
-                              backgroundColor: `${accentColor}10`,
-                              border: `1px solid ${accentColor}22`,
-                              boxShadow: `0 2px 8px rgba(0,0,0,0.15)`,
+                              background: `linear-gradient(135deg, ${accentColor}0a, ${accentColor}04)`,
+                              border: `1px solid ${accentColor}18`,
+                              boxShadow: `0 1px 3px rgba(0,0,0,0.1), 0 0 0 1px ${accentColor}08 inset`,
+                              backdropFilter: 'blur(8px)',
                             }}
                             onMouseEnter={(e) => {
                               if (isEditMode) return;
-                              e.currentTarget.style.backgroundColor = `${accentColor}18`;
-                              e.currentTarget.style.borderColor = `${accentColor}45`;
-                              e.currentTarget.style.boxShadow = `0 0 35px ${accentColor}18, 0 4px 16px rgba(0,0,0,0.25)`;
-                              e.currentTarget.style.transform = 'translateY(-3px) scale(1.025)';
+                              e.currentTarget.style.background = `linear-gradient(135deg, ${accentColor}18, ${accentColor}08)`;
+                              e.currentTarget.style.borderColor = `${accentColor}40`;
+                              e.currentTarget.style.boxShadow = `0 0 30px ${accentColor}15, 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px ${accentColor}20 inset`;
+                              e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
                             }}
                             onMouseLeave={(e) => {
                               if (isEditMode) return;
-                              e.currentTarget.style.backgroundColor = `${accentColor}10`;
-                              e.currentTarget.style.borderColor = `${accentColor}22`;
-                              e.currentTarget.style.boxShadow = `0 2px 8px rgba(0,0,0,0.15)`;
+                              e.currentTarget.style.background = `linear-gradient(135deg, ${accentColor}0a, ${accentColor}04)`;
+                              e.currentTarget.style.borderColor = `${accentColor}18`;
+                              e.currentTarget.style.boxShadow = `0 1px 3px rgba(0,0,0,0.1), 0 0 0 1px ${accentColor}08 inset`;
                               e.currentTarget.style.transform = '';
                             }}
                           >
@@ -1466,30 +1470,39 @@ export default function App() {
                                 if (isEditMode) e.preventDefault();
                               }}
                             >
-                              {item.svgContent ? (
-                                <span className="w-[22px] h-[22px] flex items-center justify-center" style={{ color: accentColor }} dangerouslySetInnerHTML={{ __html: item.svgContent }} />
-                              ) : (
-                                <Icon name={item.icon || 'FileText'} size={22} style={{ color: accentColor }} />
-                              )}
+                              <div className="relative flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-transform duration-300 group-hover:scale-110" style={{
+                                background: `${accentColor}15`,
+                              }}>
+                                {item.svgContent ? (
+                                  <span className="w-[18px] h-[18px] flex items-center justify-center" style={{ color: accentColor }} dangerouslySetInnerHTML={{ __html: item.svgContent }} />
+                                ) : (
+                                  <Icon name={item.icon || 'FileText'} size={18} style={{ color: accentColor }} />
+                                )}
+                              </div>
 
-                              <span className="text-base font-semibold text-slate-100 whitespace-nowrap leading-tight">
+                              <span className="text-sm font-semibold text-slate-100 whitespace-nowrap leading-tight tracking-tight group-hover:text-white transition-colors duration-300">
                                 {item.name}
                               </span>
                             </a>
 
                             {!isEditMode ? (
-                              <ExternalLink size={14} className="text-slate-500 group-hover:text-slate-300 transition shrink-0 opacity-50 group-hover:opacity-100" />
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-slate-600 font-mono opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate max-w-[200px] hidden md:block">
+                                  {item.hideUrl ? '' : item.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                                </span>
+                                <ExternalLink size={13} className="text-slate-500 group-hover:text-slate-300 transition-all shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5" />
+                              </div>
                             ) : (
                               <div className="flex items-center gap-1 shrink-0">
-                                <button onClick={() => handleItemSortOrder(activeSection.id, itemIdx, 'up')} disabled={itemIdx === 0} className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-25" title="Up"><ChevronUp size={10} /></button>
-                                <button onClick={() => handleItemSortOrder(activeSection.id, itemIdx, 'down')} disabled={itemIdx === activeSection.items.length - 1} className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-25" title="Down"><ChevronDown size={10} /></button>
-                                <select className="bg-slate-800 text-slate-100 text-[10px] py-0.5 px-1.5 rounded-full border border-slate-700 outline-none max-w-[60px]" value={activeSection.id} onChange={(e) => handleMoveToSection(activeSection.id, item.id, e.target.value)} title="Move"><option value="">Move</option>{sections.map(s => (<option key={s.id} value={s.id}>{s.title}</option>))}</select>
-                                <button onClick={() => { setSvgPickerSectionId(activeSection.id); setSvgPickerItemId(item.id); setSvgPickerOpen(true); }} className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400" title="Icon"><Palette size={10} /></button>
-                                <div className="relative h-4 w-4 rounded-full overflow-hidden border border-slate-700 flex items-center justify-center">
-                                  <input type="color" className="absolute inset-0 cursor-pointer h-6 w-6 border-none p-0 bg-transparent translate-x-[-3px] translate-y-[-3px]" value={accentColor} onChange={(e) => handleItemColorChange(activeSection.id, item.id, e.target.value)} title="Color" />
+                                <button onClick={() => handleItemSortOrder(activeSection.id, itemIdx, 'up')} disabled={itemIdx === 0} className="h-7 w-7 rounded-xl hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-25 transition" title="Up"><ChevronUp size={11} /></button>
+                                <button onClick={() => handleItemSortOrder(activeSection.id, itemIdx, 'down')} disabled={itemIdx === activeSection.items.length - 1} className="h-7 w-7 rounded-xl hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-25 transition" title="Down"><ChevronDown size={11} /></button>
+                                <select className="bg-slate-800 text-slate-100 text-[10px] py-1 px-2 rounded-xl border border-slate-700 outline-none max-w-[65px] cursor-pointer" value={activeSection.id} onChange={(e) => handleMoveToSection(activeSection.id, item.id, e.target.value)} title="Move"><option value="">Move</option>{sections.map(s => (<option key={s.id} value={s.id}>{s.title}</option>))}</select>
+                                <button onClick={() => { setSvgPickerSectionId(activeSection.id); setSvgPickerItemId(item.id); setSvgPickerOpen(true); }} className="h-7 w-7 rounded-xl hover:bg-slate-800 flex items-center justify-center text-slate-400 transition" title="Icon"><Palette size={11} /></button>
+                                <div className="relative h-5 w-5 rounded-lg overflow-hidden border border-slate-700 flex items-center justify-center">
+                                  <input type="color" className="absolute inset-0 cursor-pointer h-8 w-8 border-none p-0 bg-transparent -translate-x-1 -translate-y-1" value={accentColor} onChange={(e) => handleItemColorChange(activeSection.id, item.id, e.target.value)} title="Color" />
                                 </div>
-                                <button onClick={() => handleEditLinkRequest(activeSection.id, item)} className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-cyan-400" title="Edit"><Pencil size={10} /></button>
-                                <button onClick={() => handleDeleteItem(activeSection.id, item.id, item.name)} className="h-6 w-6 rounded-full hover:bg-rose-950/40 text-rose-500 flex items-center justify-center" title="Delete"><Trash size={10} /></button>
+                                <button onClick={() => handleEditLinkRequest(activeSection.id, item)} className="h-7 w-7 rounded-xl hover:bg-slate-800 flex items-center justify-center text-cyan-400 transition" title="Edit"><Pencil size={11} /></button>
+                                <button onClick={() => handleDeleteItem(activeSection.id, item.id, item.name)} className="h-7 w-7 rounded-xl hover:bg-rose-950/40 text-rose-500 flex items-center justify-center transition" title="Delete"><Trash size={11} /></button>
                               </div>
                             )}
                           </div>
