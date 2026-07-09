@@ -35,6 +35,17 @@ export default function LoginPage() {
     }
   };
 
+  // Floating blob configurations
+  const blobs = [
+    { color: '#C4B5FD', size: 600, x: '10%', y: '15%', duration: 28, delay: 0 },
+    { color: '#8B5CF6', size: 500, x: '75%', y: '10%', duration: 35, delay: 2 },
+    { color: '#60A5FA', size: 450, x: '60%', y: '60%', duration: 32, delay: 1 },
+    { color: '#BFDBFE', size: 350, x: '20%', y: '70%', duration: 25, delay: 3 },
+    { color: '#FDBA74', size: 400, x: '85%', y: '75%', duration: 30, delay: 0.5 },
+    { color: '#F9A8D4', size: 300, x: '40%', y: '25%', duration: 22, delay: 1.5 },
+    { color: '#FFFFFF', size: 200, x: '50%', y: '45%', duration: 38, delay: 2.5 },
+  ];
+
   return (
     <div
       className={`relative min-h-screen flex items-center justify-center overflow-hidden font-sans ${isDarkMode ? 'dark' : ''}`}
@@ -42,42 +53,48 @@ export default function LoginPage() {
         fontFamily: "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif",
       }}
     >
-      {/* Aurora gradient background */}
-      <div className="absolute inset-0 bg-slate-950">
+      {/* Aurora mesh background - dark base with animated blobs */}
+      <div className="absolute inset-0" style={{ backgroundColor: isDarkMode ? '#0b0b1a' : '#f8fafc' }}>
+        {/* Floating gradient blobs */}
+        {blobs.map((blob, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: blob.size,
+              height: blob.size,
+              background: `radial-gradient(circle, ${blob.color}${isDarkMode ? '60' : '40'} 0%, ${blob.color}20 40%, transparent 70%)`,
+              filter: 'blur(80px)',
+              top: blob.y,
+              left: blob.x,
+              transform: 'translate(-50%, -50%)',
+              willChange: 'transform',
+            }}
+            animate={{
+              x: [0, 60, -40, 80, -30, 0],
+              y: [0, -50, 70, -30, 40, 0],
+              scale: [1, 1.15, 0.9, 1.1, 0.95, 1],
+              rotate: [0, 8, -5, 12, -8, 0],
+            }}
+            transition={{
+              duration: blob.duration,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: blob.delay,
+              times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+            }}
+          />
+        ))}
+
+        {/* Subtle grain overlay */}
         <div
-          className="absolute inset-0 opacity-50"
+          className="absolute inset-0 opacity-[0.015]"
           style={{
-            background: `
-              radial-gradient(ellipse 80% 60% at 10% 20%, rgba(6, 182, 212, 0.4) 0%, transparent 60%),
-              radial-gradient(ellipse 60% 50% at 90% 80%, rgba(139, 92, 246, 0.35) 0%, transparent 60%),
-              radial-gradient(ellipse 70% 40% at 50% 50%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
-              radial-gradient(ellipse 50% 40% at 20% 70%, rgba(251, 191, 36, 0.1) 0%, transparent 50%),
-              radial-gradient(ellipse 40% 30% at 80% 30%, rgba(52, 211, 153, 0.1) 0%, transparent 50%)
-            `,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            backgroundSize: '256px 256px',
           }}
-        />
-        {/* Animated aurora shimmer */}
-        <motion.div
-          className="absolute inset-0"
-          animate={{
-            background: [
-              'radial-gradient(ellipse 80% 60% at 10% 20%, rgba(6, 182, 212, 0.4) 0%, transparent 60%)',
-              'radial-gradient(ellipse 80% 60% at 20% 30%, rgba(6, 182, 212, 0.3) 0%, transparent 60%)',
-              'radial-gradient(ellipse 80% 60% at 10% 20%, rgba(6, 182, 212, 0.4) 0%, transparent 60%)',
-            ],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
-
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '64px 64px',
-        }}
-      />
 
       {/* Theme toggle */}
       <button
@@ -100,13 +117,18 @@ export default function LoginPage() {
         className="relative z-10 w-full max-w-md mx-4"
       >
         <div
-          className="rounded-3xl p-8 md:p-10 backdrop-blur-2xl border shadow-2xl transition-colors duration-300"
+          className="p-8 md:p-10 border shadow-2xl transition-colors duration-300"
           style={{
-            backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.6)',
-            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+            borderRadius: '28px',
+            backdropFilter: 'blur(25px)',
+            WebkitBackdropFilter: 'blur(25px)',
+            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.5)',
+            borderColor: isDarkMode ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.8)',
+            borderWidth: '1px',
+            borderStyle: 'solid',
             boxShadow: isDarkMode
               ? '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-              : '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.03)',
+              : '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5)',
           }}
         >
           {/* Logo/Header */}
