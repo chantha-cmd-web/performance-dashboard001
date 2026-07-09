@@ -84,8 +84,11 @@ import {
   ThemeConfig,
   SyncConfig,
   DeviceSession,
-  SharedState
+  SharedState,
+  UserRole,
 } from './types';
+
+import { useAuth, LoginPage } from './auth';
 
 import {
   DEFAULT_PROFILE,
@@ -140,8 +143,16 @@ export default function App() {
   const [globalSearch, setGlobalSearch] = useState<string>('');
   const [localSearch, setLocalSearch] = useState<Record<string, string>>({});
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState<boolean>(false);
+
+  // Auth
+  const { user: authUser, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem('par_sidebar_open');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   // Backup layout snapshot for Cancel edits flow
   const [layoutSnapshot, setLayoutSnapshot] = useState<SharedState | null>(null);
@@ -177,6 +188,11 @@ export default function App() {
   const [addItemSectionId, setAddItemSectionId] = useState<string | null>(null);
   const [newItemName, setNewItemName] = useState<string>('');
   const [newItemUrl, setNewItemUrl] = useState<string>('');
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem('par_sidebar_open', String(sidebarOpen));
+  }, [sidebarOpen]);
 
   // Initialize Clock
   useEffect(() => {
@@ -976,6 +992,14 @@ export default function App() {
   // Helper values mapping
   const activeSection = sections.find(s => s.id === activeSectionId) || sections[0];
 
+  // If not authenticated, show login
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  const userRole: UserRole = authUser?.role || 'admin';
+  const isSuperAdmin = userRole === 'super_admin';
+
   return (
     <div
       data-theme={isDayMode ? 'light' : 'dark'}
@@ -1024,12 +1048,17 @@ export default function App() {
       {/* REAL-TIME SYSTEM HEADER & NAVIGATION - Minimal */}
       <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/60 px-4 md:px-8 py-3 flex items-center justify-between shrink-0" style={{ zIndex: 40 }}>
         <div className="flex items-center gap-4">
+          {/* Hamburger menu button for sidebar */}
           <button
-            className="lg:hidden text-slate-300 h-9 w-9 flex items-center justify-center rounded-lg hover:bg-slate-800"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Toggle Navigation Drawer"
+            className="flex text-slate-300 h-9 w-9 items-center justify-center rounded-xl hover:bg-slate-800/70 transition-colors cursor-pointer"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label={sidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
           >
-            <Activity className="animate-pulse text-cyan-400" size={20} />
+            <div className="flex flex-col gap-1 items-center justify-center">
+              <span className={`block h-[2px] w-5 rounded-full bg-current transition-all duration-300 ${!sidebarOpen ? '' : 'translate-y-[3px] rotate-45'}`} />
+              <span className={`block h-[2px] w-5 rounded-full bg-current transition-all duration-300 ${!sidebarOpen ? '' : 'opacity-0'}`} />
+              <span className={`block h-[2px] w-5 rounded-full bg-current transition-all duration-300 ${!sidebarOpen ? '' : '-translate-y-[3px] -rotate-45'}`} />
+            </div>
           </button>
         </div>
 
@@ -1070,8 +1099,8 @@ export default function App() {
             )}
           </div>
 
-          {/* Edit toggling triggers */}
-          {!isEditMode ? (
+          {/* Edit toggling triggers - only Super Admin */}
+          {isSuperAdmin && !isEditMode ? (
             <button
               onClick={toggleEditMode}
               className="h-10 pl-3.5 pr-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-850 flex items-center gap-2 text-xs font-semibold cursor-pointer shadow-md transition"
@@ -1080,7 +1109,7 @@ export default function App() {
               <Pencil size={14} className="text-cyan-400" />
               <span>Edit Links</span>
             </button>
-          ) : (
+          ) : isSuperAdmin && isEditMode ? (
             <div className="flex items-center gap-1.5">
               <button
                 onClick={saveLayoutEdits}
@@ -1099,7 +1128,7 @@ export default function App() {
                 <span>Cancel</span>
               </button>
             </div>
-          )}
+          ) : null}
 
           {/* Day/Night mode toggle */}
           <button
@@ -1110,14 +1139,16 @@ export default function App() {
             {isDayMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
-          {/* System Settings trigger */}
-          <button
-            onClick={() => setSettingsModalOpen(true)}
-            className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-cyan-400 hover:bg-slate-850 shadow-md cursor-pointer transition"
-            title="System Settings"
-          >
-            <Settings size={18} />
-          </button>
+          {/* System Settings trigger - Super Admin only */}
+          {isSuperAdmin && (
+            <button
+              onClick={() => setSettingsModalOpen(true)}
+              className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-cyan-400 hover:bg-slate-850 shadow-md cursor-pointer transition"
+              title="System Settings"
+            >
+              <Settings size={18} />
+            </button>
+          )}
 
           {/* Profile user widget */}
           <div className="relative">
@@ -1126,9 +1157,9 @@ export default function App() {
               className="h-10 pl-2 pr-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 hover:text-white flex items-center gap-2 text-xs font-medium shadow-md transition cursor-pointer"
             >
               <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-white text-[10px]">
-                {profile.avatarInitials}
+                {authUser?.avatarInitials || profile.avatarInitials}
               </div>
-              <span className="hidden md:inline max-w-[80px] truncate">{profile.name}</span>
+              <span className="hidden md:inline max-w-[80px] truncate">{authUser?.name || profile.name}</span>
             </button>
 
             {/* Profile Dropdown */}
@@ -1144,23 +1175,25 @@ export default function App() {
                   >
                     <div className="p-3 border-b border-slate-800/60 mb-2">
                       <p className="text-xs text-slate-400 font-semibold tracking-wide">AUTHENTICATED AS</p>
-                      <p className="text-sm font-bold text-white truncate mt-0.5">{profile.name}</p>
-                      <p className="text-xs text-cyan-400 font-medium truncate mt-0.5">{profile.role}</p>
+                      <p className="text-sm font-bold text-white truncate mt-0.5">{authUser?.name || profile.name}</p>
+                      <p className="text-xs text-cyan-400 font-medium truncate mt-0.5">{authUser?.role === 'super_admin' ? 'Super Administrator' : authUser?.role === 'admin' ? 'Administrator' : profile.role}</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        setSettingsModalOpen(true);
-                        setProfileDropdownOpen(false);
-                      }}
-                      className="w-full text-left p-2.5 rounded-xl hover:bg-slate-900 flex items-center gap-2.5 text-xs text-slate-300 hover:text-white transition"
-                    >
-                      <Settings size={14} className="text-slate-500" />
-                      <span>Account Settings</span>
-                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        onClick={() => {
+                          setSettingsModalOpen(true);
+                          setProfileDropdownOpen(false);
+                        }}
+                        className="w-full text-left p-2.5 rounded-xl hover:bg-slate-900 flex items-center gap-2.5 text-xs text-slate-300 hover:text-white transition"
+                      >
+                        <Settings size={14} className="text-slate-500" />
+                        <span>Account Settings</span>
+                      </button>
+                    )}
                     <div className="border-t border-slate-800/60 my-1" />
                     <button
                       onClick={() => {
-                        alert("For demonstration purposes, authentication remains active.");
+                        logout();
                         setProfileDropdownOpen(false);
                       }}
                       className="w-full text-left p-2.5 rounded-xl hover:bg-rose-950/30 hover:text-rose-400 flex items-center gap-2.5 text-xs text-slate-400 transition"
@@ -1179,103 +1212,136 @@ export default function App() {
       {/* MAIN LAYOUT */}
       <div className="flex-1 w-full flex flex-col md:flex-row gap-3 py-3 min-h-0 z-10">
         
-        {/* SIDEBAR NAVIGATION PANEL - Premium with PAR branding */}
-        <aside className="hidden lg:flex w-80 flex-col gap-4 shrink-0">
-          <div className="relative border-y border-r border-slate-800/60 rounded-r-2xl flex flex-col backdrop-blur-xl shadow-2xl h-full overflow-hidden" style={{ backgroundColor: '#080830' }}>
-            {/* Decorative gradient blobs */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-10 blur-3xl" style={{ backgroundColor: '#06b6d4' }} />
-            <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full opacity-10 blur-3xl" style={{ backgroundColor: '#8b5cf6' }} />
-            
-            {/* PAR Branding header */}
-            <div className="relative z-10 p-5 pb-4 border-b border-slate-800/50">
-              <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-900/40">
-                  <Activity className="text-white" size={22} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-xl text-white tracking-tight">PAR</span>
-                    <span className="text-[10px] bg-cyan-900/60 text-cyan-400 border border-cyan-800/60 px-1.5 py-0.5 rounded-md font-mono font-bold">v3.0</span>
+        {/* ANIMATED SIDEBAR - Slide in/out with hamburger toggle */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <>
+              {/* Mobile overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-30 lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+              
+              <motion.aside
+                initial={{ x: -320, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -320, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                className="fixed lg:relative top-0 lg:top-auto left-0 z-40 lg:z-auto h-full lg:h-auto w-80 flex-col gap-4 shrink-0"
+              >
+                <div className="relative border-y border-r border-slate-800/60 rounded-r-2xl flex flex-col backdrop-blur-xl shadow-2xl h-full overflow-hidden" style={{ backgroundColor: '#080830', width: '320px' }}>
+                  {/* Decorative gradient blobs */}
+                  <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-10 blur-3xl" style={{ backgroundColor: '#06b6d4' }} />
+                  <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full opacity-10 blur-3xl" style={{ backgroundColor: '#8b5cf6' }} />
+                  
+                  {/* PAR Branding header with Close button */}
+                  <div className="relative z-10 p-5 pb-4 border-b border-slate-800/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-900/40">
+                        <Activity className="text-white" size={22} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-xl text-white tracking-tight">PAR</span>
+                          <span className="text-[10px] bg-cyan-900/60 text-cyan-400 border border-cyan-800/60 px-1.5 py-0.5 rounded-md font-mono font-bold">v3.0</span>
+                        </div>
+                        <p className="text-[11px] text-white/50 font-mono mt-0.5">{sections.reduce((a, s) => a + s.items.length, 0)} links · {sections.length} modules</p>
+                      </div>
+                      {/* Close button */}
+                      <button
+                        onClick={() => setSidebarOpen(false)}
+                        className="h-8 w-8 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer"
+                        aria-label="Close sidebar"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-white/50 font-mono mt-0.5">{sections.reduce((a, s) => a + s.items.length, 0)} links · {sections.length} modules</p>
-                </div>
-              </div>
-            </div>
 
-            {/* Catalog Modules */}
-            <div className="px-5 pt-4 pb-1 relative z-10">
-              <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
-                <p className="text-[10px] font-bold tracking-widest text-white/40 uppercase">Modules</p>
-              </div>
-            </div>
-
-            <nav className="flex flex-col gap-1 flex-grow overflow-y-auto px-3 pb-2 relative z-10">
-              {sectionOrder.map((secId, i) => {
-                const sec = sections.find(s => s.id === secId);
-                if (!sec) return null;
-                const isActive = activeSectionId === secId;
-
-                return (
-                    <div
-                      key={secId}
-                      className={`group relative rounded-2xl flex items-center px-4 py-3 transition-all duration-200 cursor-pointer overflow-hidden font-bold ${
-                        isActive
-                          ? 'text-white'
-                          : 'text-white/50 hover:text-white hover:bg-white/5'
-                      }`}
-                      onClick={() => setActiveSectionId(secId)}
-                      style={isActive ? {
-                        background: `linear-gradient(135deg, ${sec.color}20, ${sec.color}08)`,
-                      } : {}}
-                    >
-                      {/* Active left bar */}
-                      {isActive && (
-                        <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full" style={{ backgroundColor: sec.color, boxShadow: `0 0 8px ${sec.color}` }} />
-                      )}
-                      
-                      {/* Section icon */}
-                      <div className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0" style={{
-                        background: isActive ? `${sec.color}25` : 'rgba(255,255,255,0.06)',
-                        color: isActive ? sec.color : 'rgba(255,255,255,0.5)'
-                      }}>
-                        <Icon name={secId === 'operations' ? 'Settings' : secId === 'finance' ? 'Coins' : 'GraduationCap'} size={18} />
-                      </div>
-
-                      <div className="ml-3.5 flex-grow min-w-0">
-                        <p className="text-sm font-bold truncate leading-snug">{sec.title}</p>
-                        <p className="text-[10px] text-white/40 font-mono mt-0.5">{sec.items.length} items</p>
-                      </div>
-
-                    {isEditMode ? (
-                      <div className="flex items-center gap-0.5 bg-slate-950/80 rounded-full border border-slate-800/60 p-0.5" onClick={e => e.stopPropagation()}>
-                        <button onClick={() => handleSectionOrderSwap(i, 'up')} disabled={i === 0} className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-30"><ChevronUp size={11} /></button>
-                        <button onClick={() => handleSectionOrderSwap(i, 'down')} disabled={i === sectionOrder.length - 1} className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-30"><ChevronDown size={11} /></button>
-                      </div>
-                    ) : (
-                      <ChevronRight size={16} className="text-slate-600 group-hover:text-slate-400 transition-colors group-hover:translate-x-0.5 transition-transform" />
-                    )}
+                  {/* Catalog Modules */}
+                  <div className="px-5 pt-4 pb-1 relative z-10">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                      <p className="text-[10px] font-bold tracking-widest text-white/40 uppercase">Modules</p>
+                    </div>
                   </div>
-                );
-              })}
-            </nav>
 
-            {/* Status footer */}
-            <div className="relative z-10 mt-auto px-5 py-3 border-t border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
-                <span className="text-[10px] text-white/50 font-mono">Live</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[10px] text-white/40 font-mono">
-                <Cloud size={10} />
-                <span>{new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
-              </div>
-            </div>
-          </div>
-        </aside>
+                  <nav className="flex flex-col gap-1 flex-grow overflow-y-auto px-3 pb-2 relative z-10">
+                    {sectionOrder.map((secId, i) => {
+                      const sec = sections.find(s => s.id === secId);
+                      if (!sec) return null;
+                      const isActive = activeSectionId === secId;
+
+                      return (
+                          <div
+                            key={secId}
+                            className={`group relative rounded-2xl flex items-center px-4 py-3 transition-all duration-200 cursor-pointer overflow-hidden font-bold ${
+                              isActive
+                                ? 'text-white'
+                                : 'text-white/50 hover:text-white hover:bg-white/5'
+                            }`}
+                            onClick={() => { setActiveSectionId(secId); setSidebarOpen(false); }}
+                            style={isActive ? {
+                              background: `linear-gradient(135deg, ${sec.color}20, ${sec.color}08)`,
+                            } : {}}
+                          >
+                            {/* Active left bar */}
+                            {isActive && (
+                              <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full" style={{ backgroundColor: sec.color, boxShadow: `0 0 8px ${sec.color}` }} />
+                            )}
+                            
+                            {/* Section icon */}
+                            <div className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0" style={{
+                              background: isActive ? `${sec.color}25` : 'rgba(255,255,255,0.06)',
+                              color: isActive ? sec.color : 'rgba(255,255,255,0.5)'
+                            }}>
+                              <Icon name={secId === 'operations' ? 'Settings' : secId === 'finance' ? 'Coins' : 'GraduationCap'} size={18} />
+                            </div>
+
+                            <div className="ml-3.5 flex-grow min-w-0">
+                              <p className="text-sm font-bold truncate leading-snug">{sec.title}</p>
+                              <p className="text-[10px] text-white/40 font-mono mt-0.5">{sec.items.length} items</p>
+                            </div>
+
+                          {isEditMode && isSuperAdmin ? (
+                            <div className="flex items-center gap-0.5 bg-slate-950/80 rounded-full border border-slate-800/60 p-0.5" onClick={e => e.stopPropagation()}>
+                              <button onClick={() => handleSectionOrderSwap(i, 'up')} disabled={i === 0} className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-30"><ChevronUp size={11} /></button>
+                              <button onClick={() => handleSectionOrderSwap(i, 'down')} disabled={i === sectionOrder.length - 1} className="h-6 w-6 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 disabled:opacity-30"><ChevronDown size={11} /></button>
+                            </div>
+                          ) : (
+                            <ChevronRight size={16} className="text-slate-600 group-hover:text-slate-400 transition-colors group-hover:translate-x-0.5 transition-transform" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </nav>
+
+                  {/* Status footer */}
+                  <div className="relative z-10 mt-auto px-5 py-3 border-t border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                      </span>
+                      <span className="text-[10px] text-white/50 font-mono">Live</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-white/40 font-mono">
+                      <Cloud size={10} />
+                      <span>{new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* MAIN DASHBOARD CONTENT AREA */}
         <main className="flex-grow min-w-0 flex flex-col">
@@ -1317,7 +1383,7 @@ export default function App() {
                 )}
               </div>
 
-              {isEditMode && (
+              {isSuperAdmin && isEditMode && (
                 <button
                   type="button"
                   onClick={() => triggerAddItemModal(activeSection.id)}
@@ -1933,86 +1999,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* MOBILE MENUS SIDEBAR DRAWER PANEL */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50">
-            {/* Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
-              onClick={() => setMobileMenuOpen(false)}
-            />
 
-            {/* Sidebar drawer body */}
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              className="absolute left-0 top-0 bottom-0 w-80 bg-slate-950 border-r border-slate-850 p-6 flex flex-col justify-between"
-              style={{ zIndex: 120 }}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-850/60">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs">
-                      PAR
-                    </div>
-                    <span className="font-extrabold text-white">Modules Navigation</span>
-                  </div>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="h-8 w-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-
-                <nav className="flex flex-col gap-2">
-                  {sectionOrder.map((secId) => {
-                    const sec = sections.find(s => s.id === secId);
-                    if (!sec) return null;
-                    const isActive = activeSectionId === secId;
-
-                    return (
-                      <div
-                        key={secId}
-                        className={`p-3.5 rounded-xl flex items-center gap-3 border ${
-                          isActive
-                            ? 'bg-slate-900 border-slate-800 text-white'
-                            : 'border-transparent text-slate-400 hover:bg-slate-900/35 hover:text-white'
-                        }`}
-                        onClick={() => {
-                          setActiveSectionId(secId);
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        <div
-                          className="h-8 w-8 rounded-lg flex items-center justify-center font-bold text-slate-200 transition"
-                          style={{
-                            backgroundColor: isActive ? `${sec.color}25` : 'rgba(255, 255, 255, 0.05)',
-                            color: sec.color
-                          }}
-                        >
-                          <Icon name={secId === 'operations' ? 'Settings' : secId === 'finance' ? 'Coins' : 'GraduationCap'} size={16} />
-                        </div>
-                        <span className="text-sm font-bold">{sec.title}</span>
-                      </div>
-                    );
-                  })}
-                </nav>
-              </div>
-
-              {/* Connected details */}
-              <div className="pt-4 border-t border-slate-850/60 flex flex-col gap-1.5 font-mono text-[10px] text-slate-500">
-                <p>Status: {wsStatus === 'connected' ? 'Sync Active (Cloud)' : 'Offline (local storage)'}</p>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

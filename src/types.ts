@@ -55,6 +55,26 @@ export interface DeviceSession {
   isCurrent?: boolean;
 }
 
+export type UserRole = 'super_admin' | 'admin';
+
+export interface AuthUser {
+  userId: string;
+  role: UserRole;
+  name: string;
+  avatarInitials: string;
+}
+
+export interface LoginCredentials {
+  userId: string;
+  password: string;
+}
+
+export interface AuthState {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
 export interface SharedState {
   sections: SectionConfig[];
   sectionOrder: string[];
