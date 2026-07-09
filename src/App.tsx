@@ -1540,27 +1540,11 @@ export default function App() {
                               }}
                             >
                               <div
-                                className="relative flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+                                className="relative flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md"
                                 style={{
-                                  background: isDarkGlass ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.9)',
-                                  backdropFilter: 'blur(8px)',
-                                  WebkitBackdropFilter: 'blur(8px)',
-                                  border: '1.5px solid rgba(30, 58, 138, 0.45)',
-                                  boxShadow: isDarkGlass
-                                    ? '0 4px 16px rgba(0,0,0,0.15), 0 0 24px rgba(30,58,138,0.08)'
-                                    : '0 2px 8px rgba(30,58,138,0.1)',
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.boxShadow = isDarkGlass
-                                    ? '0 8px 32px rgba(0,0,0,0.25), 0 0 40px rgba(30,58,138,0.15)'
-                                    : '0 8px 24px rgba(30,58,138,0.18)';
-                                  e.currentTarget.style.borderColor = 'rgba(30, 64, 175, 0.6)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.boxShadow = isDarkGlass
-                                    ? '0 4px 16px rgba(0,0,0,0.15), 0 0 24px rgba(30,58,138,0.08)'
-                                    : '0 2px 8px rgba(30,58,138,0.1)';
-                                  e.currentTarget.style.borderColor = 'rgba(30, 58, 138, 0.45)';
+                                  background: '#ffffff',
+                                  border: '1.5px solid #1e3a8a',
+                                  boxShadow: '0 2px 8px rgba(30, 58, 138, 0.1)',
                                 }}
                               >
                                 {item.svgContent ? (
