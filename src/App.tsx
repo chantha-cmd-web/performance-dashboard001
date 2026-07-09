@@ -1007,13 +1007,18 @@ export default function App() {
       data-theme={isDayMode ? 'light' : 'dark'}
       className="relative min-h-screen flex flex-col font-sans overflow-x-hidden"
       style={{
-        color: isDarkGlass ? '#e2e8f0' : '#0f172a',
-        backgroundColor: hasBgImage ? '#0f172a' : (isDayMode ? '#ffffff' : '#0b1120'),
-        backgroundImage: hasBgImage ? `url(${theme.backgroundImage})` : 'none',
-        backgroundSize: 'cover',
+        color: isDarkGlass ? '#f1f5f9' : '#0f172a',
+        backgroundColor: hasBgImage ? '#0a1628' : (isDayMode ? '#ffffff' : '#0a1628'),
+        backgroundImage: hasBgImage
+          ? `url(${theme.backgroundImage})`
+          : isDayMode
+            ? 'none'
+            : 'linear-gradient(135deg, #050a18 0%, #0a1628 25%, #0f1a35 50%, #0a1628 75%, #050a18 100%)',
+        backgroundSize: hasBgImage ? 'cover' : '400% 400%',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
-        transition: 'background-color 0.4s ease'
+        animation: isDayMode ? 'none' : 'dark-gradient-shift 20s ease infinite',
+        transition: 'background-color 0.4s ease, background-image 0.6s ease'
       }}
     >
       {/* Dynamic Overlay if custom background is set */}
@@ -1033,8 +1038,10 @@ export default function App() {
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full flex items-center gap-3 shadow-2xl backdrop-blur-md"
             style={{
-              background: isNoticeError ? 'rgba(220, 38, 38, 0.95)' : 'rgba(15, 23, 42, 0.95)',
-              border: isNoticeError ? '1px solid rgba(248, 113, 113, 0.4)' : '1px solid rgba(6, 182, 212, 0.3)',
+              background: isNoticeError ? 'rgba(220, 38, 38, 0.9)' : (isDarkGlass ? 'rgba(10, 22, 40, 0.9)' : 'rgba(15, 23, 42, 0.95)'),
+              border: isNoticeError ? '1px solid rgba(248, 113, 113, 0.4)' : (isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(6, 182, 212, 0.3)'),
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
               color: '#fff'
             }}
           >
@@ -1049,7 +1056,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* REAL-TIME SYSTEM HEADER & NAVIGATION - Minimal */}
-      <header className="sticky top-0 z-40 px-4 md:px-8 py-3 flex items-center justify-between shrink-0" style={{ zIndex: 40, background: isDarkGlass ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderBottom: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.25)' : '1px solid rgba(30, 58, 138, 0.1)' }}>
+      <header className="sticky top-0 z-40 px-4 md:px-8 py-3 flex items-center justify-between shrink-0" style={{ zIndex: 40, background: isDarkGlass ? 'rgba(10, 22, 40, 0.75)' : 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', borderBottom: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.25)' : '1px solid rgba(30, 58, 138, 0.1)' }}>
         <div className="flex items-center gap-4">
           {/* Hamburger menu button for sidebar */}
           <button
@@ -1190,7 +1197,7 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     className="absolute right-0 mt-2 w-56 rounded-2xl p-2 shadow-2xl z-40"
-                    style={{ background: isDarkGlass ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.9)', border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+                    style={{ background: isDarkGlass ? 'rgba(8, 20, 40, 0.9)' : 'rgba(255, 255, 255, 0.9)', border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)' }}
                   >
                     <div className="p-3 mb-2" style={{ borderBottom: isDarkGlass ? '1px solid rgba(30,58,138,0.2)' : '1px solid rgba(30,58,138,0.1)' }}>
                       <p className="text-xs text-slate-400 font-semibold tracking-wide">AUTHENTICATED AS</p>
@@ -1241,7 +1248,8 @@ export default function App() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-30 lg:hidden"
+                className="fixed inset-0 z-30 lg:hidden"
+                style={{ background: isDarkGlass ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
                 onClick={() => setSidebarOpen(false)}
               />
               
@@ -1252,10 +1260,10 @@ export default function App() {
                 transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                 className="fixed lg:relative top-0 lg:top-auto left-0 z-40 lg:z-auto h-full lg:h-auto w-80 flex-col gap-4 shrink-0"
               >
-                <div className="relative border-y border-r border-slate-800/60 rounded-r-2xl flex flex-col backdrop-blur-xl shadow-2xl h-full overflow-hidden" style={{ backgroundColor: '#080830', width: '320px' }}>
+                <div className="relative border-y border-r rounded-r-2xl flex flex-col backdrop-blur-xl shadow-2xl h-full overflow-hidden" style={{ background: 'linear-gradient(180deg, #080830 0%, #0a1630 50%, #080828 100%)', borderColor: 'rgba(30,58,138,0.25)', width: '320px' }}>
                   {/* Decorative gradient blobs */}
-                  <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-10 blur-3xl" style={{ backgroundColor: '#06b6d4' }} />
-                  <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full opacity-10 blur-3xl" style={{ backgroundColor: '#8b5cf6' }} />
+                  <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-[0.12] blur-3xl" style={{ backgroundColor: '#06b6d4' }} />
+                  <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full opacity-[0.12] blur-3xl" style={{ backgroundColor: '#8b5cf6' }} />
                   
                   {/* PAR Branding header with Close button */}
                   <div className="relative z-10 p-5 pb-4 border-b border-slate-800/50">
@@ -1436,11 +1444,11 @@ export default function App() {
           {/* Grid layout of dynamic items - fills remaining screen */}
           <div className="relative flex-1 min-h-0 overflow-y-hidden rounded-2xl p-5 transition-colors duration-300"
             style={{
-              background: isDarkGlass ? 'rgba(15, 23, 42, 0.35)' : 'rgba(255, 255, 255, 0.5)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: isDarkGlass ? 'rgba(10, 22, 40, 0.6)' : 'rgba(255, 255, 255, 0.5)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
               border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)',
-              boxShadow: isDarkGlass ? '0 8px 40px rgba(0,0,0,0.15)' : '0 4px 20px rgba(30,58,138,0.05)',
+              boxShadow: isDarkGlass ? '0 8px 48px rgba(0,0,0,0.25), 0 0 60px rgba(30,58,138,0.05)' : '0 4px 20px rgba(30,58,138,0.05)',
             }}
           >
             {/* Subtle inner glow */}
@@ -1501,33 +1509,33 @@ export default function App() {
                           <div
                             className="relative group flex items-center gap-3.5 px-5 py-3.5 rounded-2xl transition-all duration-300 will-change-transform cursor-pointer"
                             style={{
-                              background: isDarkGlass ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.75)',
-                              backdropFilter: 'blur(16px)',
-                              WebkitBackdropFilter: 'blur(16px)',
-                              border: '1.5px solid rgba(30, 58, 138, 0.5)',
+                              background: isDarkGlass ? 'rgba(15, 23, 42, 0.55)' : 'rgba(255, 255, 255, 0.75)',
+                              backdropFilter: 'blur(20px)',
+                              WebkitBackdropFilter: 'blur(20px)',
+                              border: isDarkGlass ? '1.5px solid rgba(30, 58, 138, 0.45)' : '1.5px solid rgba(30, 58, 138, 0.5)',
                               boxShadow: isDarkGlass
-                                ? '0 8px 32px rgba(0,0,0,0.2), 0 0 0 1px rgba(30,58,138,0.12) inset, 0 0 40px rgba(30,58,138,0.06)'
+                                ? '0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(30,58,138,0.15) inset, 0 0 50px rgba(30,58,138,0.08)'
                                 : '0 4px 16px rgba(30,58,138,0.08), 0 0 0 1px rgba(30,58,138,0.04) inset',
                             }}
                             onMouseEnter={(e) => {
                               if (isEditMode) return;
-                              e.currentTarget.style.borderColor = 'rgba(30, 64, 175, 0.7)';
+                              e.currentTarget.style.borderColor = isDarkGlass ? 'rgba(30, 64, 175, 0.7)' : 'rgba(30, 64, 175, 0.7)';
                               e.currentTarget.style.boxShadow = isDarkGlass
-                                ? '0 12px 48px rgba(0,0,0,0.3), 0 0 0 1px rgba(30,64,175,0.3) inset, 0 0 60px rgba(30,58,138,0.12)'
+                                ? '0 16px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(30,64,175,0.35) inset, 0 0 80px rgba(30,58,138,0.15)'
                                 : '0 12px 40px rgba(30,58,138,0.15), 0 0 0 1px rgba(30,64,175,0.1) inset';
                               e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                              e.currentTarget.style.backdropFilter = 'blur(20px)';
-                              e.currentTarget.style.WebkitBackdropFilter = 'blur(20px)';
+                              e.currentTarget.style.backdropFilter = 'blur(24px)';
+                              e.currentTarget.style.WebkitBackdropFilter = 'blur(24px)';
                             }}
                             onMouseLeave={(e) => {
                               if (isEditMode) return;
-                              e.currentTarget.style.borderColor = 'rgba(30, 58, 138, 0.5)';
+                              e.currentTarget.style.borderColor = isDarkGlass ? 'rgba(30, 58, 138, 0.45)' : 'rgba(30, 58, 138, 0.5)';
                               e.currentTarget.style.boxShadow = isDarkGlass
-                                ? '0 8px 32px rgba(0,0,0,0.2), 0 0 0 1px rgba(30,58,138,0.12) inset, 0 0 40px rgba(30,58,138,0.06)'
+                                ? '0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(30,58,138,0.15) inset, 0 0 50px rgba(30,58,138,0.08)'
                                 : '0 4px 16px rgba(30,58,138,0.08), 0 0 0 1px rgba(30,58,138,0.04) inset';
                               e.currentTarget.style.transform = '';
-                              e.currentTarget.style.backdropFilter = 'blur(16px)';
-                              e.currentTarget.style.WebkitBackdropFilter = 'blur(16px)';
+                              e.currentTarget.style.backdropFilter = 'blur(20px)';
+                              e.currentTarget.style.WebkitBackdropFilter = 'blur(20px)';
                             }}
                           >
                             <a
@@ -1540,11 +1548,28 @@ export default function App() {
                               }}
                             >
                               <div
-                                className="relative flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md"
+                                className="relative flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
                                 style={{
-                                  background: '#ffffff',
-                                  border: '1.5px solid #1e3a8a',
-                                  boxShadow: '0 2px 8px rgba(30, 58, 138, 0.1)',
+                                  background: isDarkGlass ? 'rgba(30, 58, 138, 0.15)' : '#ffffff',
+                                  backdropFilter: isDarkGlass ? 'blur(8px)' : 'none',
+                                  WebkitBackdropFilter: isDarkGlass ? 'blur(8px)' : 'none',
+                                  border: isDarkGlass ? '1.5px solid rgba(30, 58, 138, 0.6)' : '1.5px solid #1e3a8a',
+                                  boxShadow: isDarkGlass
+                                    ? '0 0 10px rgba(30, 58, 138, 0.25), 0 0 25px rgba(30, 58, 138, 0.08), 0 4px 12px rgba(0,0,0,0.2)'
+                                    : '0 2px 8px rgba(30, 58, 138, 0.1)',
+                                  animation: isDarkGlass ? 'neon-glow 3s ease-in-out infinite' : 'none',
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isDarkGlass) return;
+                                  e.currentTarget.style.animation = 'none';
+                                  e.currentTarget.style.boxShadow = '0 0 16px rgba(30, 58, 138, 0.45), 0 0 40px rgba(30, 58, 138, 0.15), 0 8px 24px rgba(0,0,0,0.3)';
+                                  e.currentTarget.style.borderColor = 'rgba(30, 64, 175, 0.8)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isDarkGlass) return;
+                                  e.currentTarget.style.animation = 'neon-glow 3s ease-in-out infinite';
+                                  e.currentTarget.style.boxShadow = '0 0 10px rgba(30, 58, 138, 0.25), 0 0 25px rgba(30, 58, 138, 0.08), 0 4px 12px rgba(0,0,0,0.2)';
+                                  e.currentTarget.style.borderColor = 'rgba(30, 58, 138, 0.6)';
                                 }}
                               >
                                 {item.svgContent ? (
@@ -1635,7 +1660,7 @@ export default function App() {
       </div>
 
       {/* SYSTEM BOTTOM BAR */}
-      <footer className="shrink-0 px-6 py-2.5 flex flex-row items-center justify-between" style={{ background: isDarkGlass ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderTop: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.25)' : '1px solid rgba(30, 58, 138, 0.1)' }}>
+      <footer className="shrink-0 px-6 py-2.5 flex flex-row items-center justify-between" style={{ background: isDarkGlass ? 'rgba(10, 22, 40, 0.75)' : 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', borderTop: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.25)' : '1px solid rgba(30, 58, 138, 0.1)' }}>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2.5">
             <div className="h-6 w-6 rounded-md bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center shadow-sm shadow-cyan-900/30">
@@ -1673,9 +1698,9 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 backdrop-blur-md"
+              className="absolute inset-0"
               onClick={() => setSettingsModalOpen(false)}
-              style={{ background: isDarkGlass ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.3)' }}
+              style={{ background: isDarkGlass ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
             />
 
             {/* Main Modal body */}
@@ -1684,7 +1709,7 @@ export default function App() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.93, opacity: 0, y: 15 }}
               className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 rounded-3xl text-sm shadow-2xl"
-              style={{ zIndex: 100, background: isDarkGlass ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.9)', border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', color: isDarkGlass ? '#e2e8f0' : '#0f172a' }}
+              style={{ zIndex: 100, background: isDarkGlass ? 'rgba(8, 20, 40, 0.92)' : 'rgba(255, 255, 255, 0.9)', border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)', backdropFilter: 'blur(36px)', WebkitBackdropFilter: 'blur(36px)', color: isDarkGlass ? '#f1f5f9' : '#0f172a' }}
             >
               {/* Close Button element */}
               <button
@@ -1951,24 +1976,25 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+              className="absolute inset-0"
               onClick={() => {
                 setUrlEditorOpen(false);
                 setEditingItemId(null);
                 setEditingItemSection(null);
               }}
+              style={{ background: isDarkGlass ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
             />
 
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="relative w-full max-w-md bg-slate-900 border border-slate-850 p-6 rounded-2xl text-sm"
-              style={{ zIndex: 100 }}
+              className="relative w-full max-w-md p-6 rounded-2xl text-sm shadow-2xl"
+              style={{ zIndex: 100, background: isDarkGlass ? 'rgba(8, 20, 40, 0.92)' : 'rgba(255, 255, 255, 0.9)', border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', color: isDarkGlass ? '#f1f5f9' : '#0f172a' }}
             >
-              <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2 mb-4 pb-2.5" style={{ borderBottom: isDarkGlass ? '1px solid rgba(30,58,138,0.2)' : '1px solid rgba(30,58,138,0.1)' }}>
                 <Pencil size={18} className="text-cyan-400" />
-                <h3 className="font-extrabold text-white text-base">Edit item options</h3>
+                <h3 className="font-extrabold text-base" style={{ color: isDarkGlass ? '#ffffff' : '#0f172a' }}>Edit item options</h3>
               </div>
 
               <div className="flex flex-col gap-4">
@@ -2044,23 +2070,24 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+              className="absolute inset-0"
               onClick={() => {
                 setAddItemOpen(false);
                 setAddItemSectionId(null);
               }}
+              style={{ background: isDarkGlass ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
             />
 
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="relative w-full max-w-md bg-slate-900 border border-slate-850 p-6 rounded-2xl text-sm"
-              style={{ zIndex: 100 }}
+              className="relative w-full max-w-md p-6 rounded-2xl text-sm shadow-2xl"
+              style={{ zIndex: 100, background: isDarkGlass ? 'rgba(8, 20, 40, 0.92)' : 'rgba(255, 255, 255, 0.9)', border: isDarkGlass ? '1px solid rgba(30, 58, 138, 0.3)' : '1px solid rgba(30, 58, 138, 0.15)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', color: isDarkGlass ? '#f1f5f9' : '#0f172a' }}
             >
-              <div className="flex items-center gap-2 mb-4 border-b border-slate-850 pb-2.5">
+              <div className="flex items-center gap-2 mb-4 pb-2.5" style={{ borderBottom: isDarkGlass ? '1px solid rgba(30,58,138,0.2)' : '1px solid rgba(30,58,138,0.1)' }}>
                 <Plus size={18} className="text-cyan-400" />
-                <h3 className="font-extrabold text-white text-base">Create new document element</h3>
+                <h3 className="font-extrabold text-base" style={{ color: isDarkGlass ? '#ffffff' : '#0f172a' }}>Create new document element</h3>
               </div>
 
               <div className="flex flex-col gap-4">
